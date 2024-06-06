@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.*?>
-
-<BorderPane fx:controller="org.example.test.controller.ChatController" xmlns:fx="http://javafx.com/fxml"
-            fx:id="root">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.test.controller.ChatController">
     <center>
-        <ListView fx:id="messageListView"/>
+        <VBox spacing="10" alignment="CENTER">
+            <children>
+                <ListView fx:id="messageListView" VBox.vgrow="ALWAYS"/>
+                <HBox spacing="10">
+                    <children>
+                        <TextField fx:id="inputField" HBox.hgrow="ALWAYS"/>
+                        <Button text="Send" fx:id="sendButton"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
     </center>
-    <bottom>
-        <HBox alignment="CENTER" spacing="10">
-            <padding>
-                <Insets top="10" right="10" bottom="10" left="10"/>
-            </padding>
-            <TextField fx:id="recipientField" promptText="Recipient"/>
-            <ComboBox fx:id="recipientComboBox" promptText="Select Recipient"/>
-            <TextField fx:id="inputField"/>
-            <Button fx:id="sendButton" text="Send"/>
-        </HBox>
-    </bottom>
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
 </BorderPane>

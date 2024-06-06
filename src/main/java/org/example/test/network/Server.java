@@ -1,92 +1,55 @@
 package org.example.test.network;
 
-import org.example.test.model.Message;
-
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Server {
     private static final int PORT = 12345;
-    private static final List<ClientThread> clients = new ArrayList<>();
+    private static Set<PrintWriter> clientWriters = new HashSet<>();
 
     public static void main(String[] args) {
+        System.out.println("Chat server started...");
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Server is running on port " + PORT);
             while (true) {
-                Socket socket = serverSocket.accept();
-                ClientThread clientThread = new ClientThread(socket);
-                clients.add(clientThread);
-                new Thread(clientThread).start();
-                broadcastUserList(); // Broadcast updated user list
+                new ClientHandler(serverSocket.accept()).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void broadcastUserList() {
-        List<String> usernames = clients.stream()
-                .map(ClientThread::getUsername)
-                .toList();
-        Message userListMessage = new Message(usernames);
-        for (ClientThread client : clients) {
-            client.sendMessage(userListMessage);
-        }
-    }
-
-    private static void forwardMessage(Message message, ClientThread sender) {
-        if (message.getRecipient() == null) { // Broadcast to all clients
-            for (ClientThread client : clients) {
-                client.sendMessage(message);
-            }
-        } else { // Private message
-            for (ClientThread client : clients) {
-                if (client != sender && client.getUsername().equals(message.getRecipient())) {
-                    client.sendMessage(message);
-                    break; // Found the recipient, no need to send to others
-                }
-            }
-        }
-    }
-
-    static class ClientThread implements Runnable {
+    private static class ClientHandler extends Thread {
         private Socket socket;
-        private ObjectOutputStream out;
-        private ObjectInputStream in;
-        private String username;
+        private PrintWriter out;
 
-        public ClientThread(Socket socket) {
+        public ClientHandler(Socket socket) {
             this.socket = socket;
         }
 
-        @Override
         public void run() {
             try {
-                out = new ObjectOutputStream(socket.getOutputStream());
-                in = new ObjectInputStream(socket.getInputStream());
+                InputStream input = socket.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+                OutputStream output = socket.getOutputStream();
+                out = new PrintWriter(output, true);
 
-                Message loginMessage = (Message) in.readObject();
-                username = loginMessage.getSender();
-                System.out.println(username + " connected");
+                synchronized (clientWriters) {
+                    clientWriters.add(out);
+                }
 
-                while (true) {
-                    try {
-                        Message message = (Message) in.readObject();
-                        System.out.println("Server received: " + message.getContent() + " from " + message.getSender());
-                        forwardMessage(message, this);
-                    } catch (IOException | ClassNotFoundException e) {
-                        System.err.println("Error reading message from client: " + e.getMessage());
-                        clients.remove(this);
-                        broadcastUserList(); // Broadcast updated user list
-                        break;
+                String message;
+                while ((message = reader.readLine()) != null) {
+                    System.out.println("Received: " + message);
+                    synchronized (clientWriters) {
+                        for (PrintWriter writer : clientWriters) {
+                            writer.println(message);
+                        }
                     }
                 }
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             } finally {
                 try {
@@ -94,19 +57,10 @@ public class Server {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                synchronized (clientWriters) {
+                    clientWriters.remove(out);
+                }
             }
-        }
-
-        public void sendMessage(Message message) {
-            try {
-                out.writeObject(message);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        public String getUsername() {
-            return username;
         }
     }
 }
