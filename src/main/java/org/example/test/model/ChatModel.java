@@ -20,9 +20,26 @@ public class ChatModel {
         return message;
     }
 
-    public void sendMessage(String username, String messageText) {
-        message.set(messageText);
-        DatabaseUtil.insertMessage(username, messageText);
+    public void sendMessage(String username, String message) {
+        DatabaseUtil.insertMessage(username, message);
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/userdb","root","Bin141005")) {
+            conn.setAutoCommit(false); // Start transaction
+            try (PreparedStatement pstmt = conn.prepareStatement("INSERT into chat (username,message,current_timestamp) VALUES (?,?,?)")) {
+                pstmt.setString(1, username);
+                pstmt.setString(2, message);
+                pstmt.setTimestamp(3, new Timestamp(System.currentTimeMillis())); // Current timestamp
+                pstmt.executeUpdate();
+                pstmt.executeUpdate();
+
+                conn.commit(); // Commit if successful
+                System.out.println("Message saved successfully.");
+            } catch (SQLException e) {
+                conn.rollback(); // Rollback on error
+                System.err.println("Error saving message: " + e.getMessage() + ", Error code: " + e.getErrorCode());
+            }
+        } catch (SQLException e) {
+            System.err.println("Database connection error: " + e.getMessage());
+        }
     }
     private ObservableList<String> messages = FXCollections.observableArrayList();
 
@@ -30,17 +47,14 @@ public class ChatModel {
         return messages;
     }
     public void loadMessageHistory() {
-        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/UserDB", "root", "Bin141005")) {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM chat_messages");
-
-            while (resultSet.next()) {
-                String sender = resultSet.getString("sender");
-                String message = resultSet.getString("message");
-                messages.add(sender + ": " + message); // Add to ObservableList
+        try (ResultSet rs = DatabaseUtil.getMessageHistory()) {
+            while (rs.next()) {
+                String sender = rs.getString("username");
+                String message = rs.getString("message");
+                messages.add(sender + ": " + message);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 }

@@ -34,11 +34,21 @@ public class ChatController {
     @FXML
     private void initialize() {
         model.loadMessageHistory();
-        messageListView.setItems(model.getMessages()); // Set the items of ListView
+        System.out.println("Messages loaded: " + model.getMessages());  // Print for debugging
+
+        messageListView.setItems(model.getMessages());
+        System.out.println("ListView items set: " + model.getMessages().size()); // Print size
 
         sendButton.setOnAction(event -> {
             String messageText = inputField.getText();
-            model.sendMessage("username", messageText); // Replace "username" with the actual username
+
+            try {
+                model.sendMessage("username", messageText); // Replace "username" with the actual username
+                System.out.println("Message sent to model."); // Log successful send
+            } catch (Exception e) { // Catch any exceptions during sending
+                System.err.println("Error sending message: " + e.getMessage());
+            }
+
             inputField.clear();
         });
     }

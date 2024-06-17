@@ -16,7 +16,7 @@ public class DatabaseUtil {
     }
 
     public static void insertMessage(String username, String message) {
-        String sql = "INSERT INTO chat_messages(username, message) VALUES(?, ?)";
+        String sql = "INSERT INTO chat_messages(username, message, timestamp) VALUES(?, ?, NOW())";
 
         try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
@@ -29,14 +29,23 @@ public class DatabaseUtil {
 
     public static ResultSet getMessageHistory() {
         String sql = "SELECT * FROM chat_messages ORDER BY timestamp ASC";
+        ResultSet rs = null;
 
-        try {
-            Connection conn = connect();
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            return pstmt.executeQuery();
+        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            rs = pstmt.executeQuery();
+            return rs;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return null;
+        } finally {
+            // Close ResultSet if not null
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    System.out.println("Error closing ResultSet: " + e.getMessage());
+                }
+            }
         }
     }
 }
