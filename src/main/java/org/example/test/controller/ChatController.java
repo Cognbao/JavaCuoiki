@@ -34,6 +34,7 @@ public class ChatController {
     @FXML
     private void initialize() {
         model.loadMessageHistory();
+        messageListView.setItems(model.getMessages()); // Set the items of ListView
 
         sendButton.setOnAction(event -> {
             String messageText = inputField.getText();

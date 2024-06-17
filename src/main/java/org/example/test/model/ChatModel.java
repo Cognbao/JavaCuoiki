@@ -2,10 +2,11 @@ package org.example.test.model;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.example.test.model.DatabaseUtil;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 
 public class ChatModel {
@@ -23,19 +24,23 @@ public class ChatModel {
         message.set(messageText);
         DatabaseUtil.insertMessage(username, messageText);
     }
+    private ObservableList<String> messages = FXCollections.observableArrayList();
 
+    public ObservableList<String> getMessages() {
+        return messages;
+    }
     public void loadMessageHistory() {
-        ResultSet rs = DatabaseUtil.getMessageHistory();
-        try {
-            while (rs != null && rs.next()) {
-                String username = rs.getString("username");
-                String message = rs.getString("message");
-                String timestamp = rs.getString("timestamp");
-                // Handle loading the message into the chat history
-                // This will depend on how you want to display it
+        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/UserDB", "root", "Bin141005")) {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM chat_messages");
+
+            while (resultSet.next()) {
+                String sender = resultSet.getString("sender");
+                String message = resultSet.getString("message");
+                messages.add(sender + ": " + message); // Add to ObservableList
             }
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 }
