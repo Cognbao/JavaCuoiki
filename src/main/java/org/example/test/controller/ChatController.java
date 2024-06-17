@@ -1,6 +1,5 @@
 package org.example.test.controller;
 
-
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
@@ -8,7 +7,6 @@ import javafx.scene.control.TextField;
 import org.example.test.model.ChatModel;
 
 public class ChatController {
-    private final ChatModel model;
     @FXML
     private ListView<String> messageListView;
     @FXML
@@ -16,24 +14,32 @@ public class ChatController {
     @FXML
     private Button sendButton;
 
+    private ChatModel model;
+
     public ChatController(ChatModel model) {
         this.model = model;
+        this.model.messageProperty().addListener((obs, oldMessage, newMessage) -> {
+            messageListView.getItems().add(newMessage);
+        });
     }
 
-    @FXML
-    private void initialize() {
-        // Initialize the controller, if needed
-    }
-
-    public ListView<String> getMessageListView() {
-        return messageListView;
+    public Button getSendButton() {
+        return sendButton;
     }
 
     public TextField getInputField() {
         return inputField;
     }
 
-    public Button getSendButton() {
-        return sendButton;
+    @FXML
+    private void initialize() {
+        model.loadMessageHistory();
+
+        sendButton.setOnAction(event -> {
+            String messageText = inputField.getText();
+            model.sendMessage("username", messageText); // Replace "username" with the actual username
+            inputField.clear();
+        });
     }
 }
+

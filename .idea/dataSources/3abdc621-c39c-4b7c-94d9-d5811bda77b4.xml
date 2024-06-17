@@ -1026,7 +1026,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
     </schema>
     <schema id="298" parent="1" name="userdb">
       <Current>1</Current>
-      <LastIntrospectionLocalTimestamp>2024-06-06.20:34:57</LastIntrospectionLocalTimestamp>
+      <LastIntrospectionLocalTimestamp>2024-06-17.17:40:17</LastIntrospectionLocalTimestamp>
       <CollationName>utf8mb4_0900_ai_ci</CollationName>
     </schema>
     <user id="299" parent="1" name="mysql.infoschema">
@@ -1048,29 +1048,62 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <Host>localhost</Host>
       <Plugin>caching_sha2_password</Plugin>
     </user>
-    <table id="303" parent="298" name="users">
+    <table id="303" parent="298" name="chat_messages">
       <Engine>InnoDB</Engine>
       <CollationName>utf8mb4_0900_ai_ci</CollationName>
     </table>
-    <column id="304" parent="303" name="username">
+    <table id="304" parent="298" name="users">
+      <Engine>InnoDB</Engine>
+      <CollationName>utf8mb4_0900_ai_ci</CollationName>
+    </table>
+    <column id="305" parent="303" name="id">
+      <AutoIncrement>1</AutoIncrement>
+      <DasType>int|0s</DasType>
+      <NotNull>1</NotNull>
+      <Position>1</Position>
+    </column>
+    <column id="306" parent="303" name="username">
+      <DasType>varchar(255)|0s</DasType>
+      <NotNull>1</NotNull>
+      <Position>2</Position>
+    </column>
+    <column id="307" parent="303" name="message">
+      <DasType>text|0s</DasType>
+      <NotNull>1</NotNull>
+      <Position>3</Position>
+    </column>
+    <column id="308" parent="303" name="timestamp">
+      <DasType>datetime|0s</DasType>
+      <DefaultExpression>CURRENT_TIMESTAMP</DefaultExpression>
+      <Position>4</Position>
+    </column>
+    <index id="309" parent="303" name="PRIMARY">
+      <ColNames>id</ColNames>
+      <Type>btree</Type>
+      <Unique>1</Unique>
+    </index>
+    <key id="310" parent="303" name="PRIMARY">
+      <NameSurrogate>1</NameSurrogate>
+      <Primary>1</Primary>
+      <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
+    </key>
+    <column id="311" parent="304" name="username">
       <DasType>varchar(50)|0s</DasType>
       <NotNull>1</NotNull>
       <Position>1</Position>
     </column>
-    <column id="305" parent="303" name="password">
+    <column id="312" parent="304" name="password">
       <DasType>varchar(50)|0s</DasType>
       <NotNull>1</NotNull>
       <Position>2</Position>
     </column>
-    <index id="306" parent="303" name="PRIMARY">
+    <index id="313" parent="304" name="username_UNIQUE">
       <ColNames>username</ColNames>
       <Type>btree</Type>
       <Unique>1</Unique>
     </index>
-    <key id="307" parent="303" name="PRIMARY">
-      <NameSurrogate>1</NameSurrogate>
-      <Primary>1</Primary>
-      <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
+    <key id="314" parent="304" name="username_UNIQUE">
+      <UnderlyingIndexName>username_UNIQUE</UnderlyingIndexName>
     </key>
   </database-model>
 </dataSource>

@@ -2,44 +2,40 @@ package org.example.test.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-import org.example.test.model.UserModel;
-import org.example.test.main.ChatApp;
+import org.example.test.service.AuthService;
 
 public class LoginController {
+    private final AuthService authService;
+    private final Stage primaryStage;
+    private final Runnable onSuccess;
 
     @FXML
     private TextField usernameField;
-
     @FXML
-    private PasswordField passwordField;
-
+    private TextField passwordField;
     @FXML
     private Button loginButton;
 
-    @FXML
-    private Label errorLabel;
-
-    private UserModel userModel;
-    private Stage primaryStage;
-
-    public LoginController(UserModel userModel, Stage primaryStage) {
-        this.userModel = userModel;
+    public LoginController(AuthService authService, Stage primaryStage, Runnable onSuccess) {
+        this.authService = authService;
         this.primaryStage = primaryStage;
+        this.onSuccess = onSuccess;
     }
 
     @FXML
-    private void handleLogin() {
-        String username = usernameField.getText();
-        String password = passwordField.getText();
-
-        if (userModel.authenticate(username, password)) {
-            ChatApp.showChatView(primaryStage, userModel);
-        } else {
-            errorLabel.setText("Invalid username or password");
-        }
+    private void initialize() {
+        loginButton.setOnAction(event -> {
+            String username = usernameField.getText();
+            String password = passwordField.getText();
+            if (authService.authenticateUser(username, password)) {
+                onSuccess.run();    // Call the method to show the chat screen
+                primaryStage.close();
+            } else {
+                System.out.println("Authentication failed");
+            }
+        });
     }
 }
