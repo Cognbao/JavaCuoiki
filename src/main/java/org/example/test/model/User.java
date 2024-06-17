@@ -1,14 +1,11 @@
 package org.example.test.model;
 
-public class User {
+public class UserModel {
+
     private String username;
     private String password;
 
-    public User() {
-        // Default constructor
-    }
-
-    public User(String username, String password) {
+    public UserModel(String username, String password) {
         this.username = username;
         this.password = password;
     }
@@ -27,13 +24,5 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                '}';
     }
 }
