@@ -17,6 +17,10 @@ import org.example.test.service.AuthService;
 import java.io.IOException;
 
 public class ChatApp extends Application {
+
+    private static ChatModel model;
+    private static AuthService authService = new AuthService(); // Initialize AuthService
+
     @Override
     public void start(Stage primaryStage) {
         try {
@@ -65,19 +69,26 @@ public class ChatApp extends Application {
 
     private void showChatScreen() {
         try {
-            ChatModel model = new ChatModel(); // Create the model once for all instances
-
+            String username = authService.getCurrentUser();  // Get username from AuthService
+            model = new ChatModel();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/test/fxml/ChatView.fxml"));
-            loader.setControllerFactory(c -> new ChatController(model)); // Pass the model to all controllers
+            loader.setControllerFactory(c -> new ChatController(model));
             Parent root = loader.load();
             Scene scene = new Scene(root, 500, 500);
             Stage chatStage = new Stage();
-            chatStage.setTitle("Chat App");
+            chatStage.setTitle(username + "'s Chat"); // Set title with username
             chatStage.setScene(scene);
             chatStage.show();
+
+            initializeNetwork(model, loader.getController());
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    //get AuthService method
+    public static AuthService getAuthService() {
+        return authService;
     }
 
     private void initializeNetwork(ChatModel model, ChatController controller) {

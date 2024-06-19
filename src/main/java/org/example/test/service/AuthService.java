@@ -8,6 +8,8 @@ import java.util.logging.Logger;
 
 public class AuthService {
 
+    private String currentUser;
+
     public boolean registerUser(User user) {
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/UserDB", "root", "Bin141005")) {
             String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
@@ -37,5 +39,8 @@ public class AuthService {
             Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
+    }
+    public String getCurrentUser() {
+        return currentUser;
     }
 }
