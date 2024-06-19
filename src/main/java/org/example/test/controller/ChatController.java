@@ -7,6 +7,7 @@ import javafx.scene.control.TextField;
 import org.example.test.model.ChatModel;
 
 public class ChatController {
+
     @FXML
     private ListView<String> messageListView;
     @FXML
@@ -16,13 +17,37 @@ public class ChatController {
 
     private ChatModel model;
 
+    // Constructor (inject the ChatModel)
     public ChatController(ChatModel model) {
         this.model = model;
-        this.model.messageProperty().addListener((obs, oldMessage, newMessage) -> {
-            messageListView.getItems().add(newMessage);
+    }
+
+    @FXML
+    private void initialize() {
+        // Bind the ListView items to the ObservableList in the ChatModel
+        messageListView.setItems(model.getMessages());
+
+        // Load message history when initializing
+        model.loadMessageHistory();
+        System.out.println("Messages loaded: " + model.getMessages());
+
+        // Send button action handler
+        sendButton.setOnAction(event -> {
+            String messageText = inputField.getText();
+            if (!messageText.isEmpty()) { // Check if message is not empty
+                try {
+                    model.sendMessage("username", messageText); // Replace "username" with actual value
+                    System.out.println("Message sent to model.");
+                } catch (Exception e) {
+                    System.err.println("Error sending message: " + e.getMessage());
+                    e.printStackTrace();
+                }
+                inputField.clear();
+            }
         });
     }
 
+    // Getters (if needed for other parts of your application)
     public Button getSendButton() {
         return sendButton;
     }
@@ -30,27 +55,4 @@ public class ChatController {
     public TextField getInputField() {
         return inputField;
     }
-
-    @FXML
-    private void initialize() {
-        model.loadMessageHistory();
-        System.out.println("Messages loaded: " + model.getMessages());  // Print for debugging
-
-        messageListView.setItems(model.getMessages());
-        System.out.println("ListView items set: " + model.getMessages().size()); // Print size
-
-        sendButton.setOnAction(event -> {
-            String messageText = inputField.getText();
-
-            try {
-                model.sendMessage("username", messageText); // Replace "username" with the actual username
-                System.out.println("Message sent to model."); // Log successful send
-            } catch (Exception e) { // Catch any exceptions during sending
-                System.err.println("Error sending message: " + e.getMessage());
-            }
-
-            inputField.clear();
-        });
-    }
 }
-

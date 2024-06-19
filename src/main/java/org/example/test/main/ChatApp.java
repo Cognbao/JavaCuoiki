@@ -65,26 +65,16 @@ public class ChatApp extends Application {
 
     private void showChatScreen() {
         try {
-            ChatModel model = new ChatModel();
+            ChatModel model = new ChatModel(); // Create the model once for all instances
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/test/fxml/ChatView.fxml"));
-            loader.setControllerFactory(c -> new ChatController(model));
+            loader.setControllerFactory(c -> new ChatController(model)); // Pass the model to all controllers
             Parent root = loader.load();
-
             Scene scene = new Scene(root, 500, 500);
-
-            // Load the CSS file
-//            String css = getClass().getResource("/org/example/test/styles.css").toExternalForm();
-//            scene.getStylesheets().add(css);
-
             Stage chatStage = new Stage();
             chatStage.setTitle("Chat App");
             chatStage.setScene(scene);
             chatStage.show();
-
-            // Initialize network connection
-            initializeNetwork(model, loader.getController());
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -93,17 +83,7 @@ public class ChatApp extends Application {
     private void initializeNetwork(ChatModel model, ChatController controller) {
         try {
             Client client = new Client("localhost", 12345);
-            new Thread(() -> {
-                try {
-                    String message;
-                    while ((message = client.receiveMessage()) != null) {
-                        final String msg = message;
-                        javafx.application.Platform.runLater(() -> model.addMessage(msg));
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
+            client.startListening(model); // Start listening in a separate thread
 
             controller.getSendButton().setOnAction(e -> {
                 String message = controller.getInputField().getText();

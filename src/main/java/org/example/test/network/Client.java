@@ -1,5 +1,8 @@
 package org.example.test.network;
 
+import javafx.application.Platform;
+import org.example.test.model.ChatModel;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -46,5 +49,21 @@ public class Client {
 
     public void close() throws IOException {
         socket.close();
+    }
+    public void startListening(ChatModel model) {
+        // Inside startListening method of Client.java
+        new Thread(() -> {
+            try {
+                String message;
+                while ((message = receiveMessage()) != null) {
+                    // Create a new final variable to hold the message
+                    final String finalMessage = message;
+                    Platform.runLater(() -> model.addMessage(finalMessage));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+
     }
 }

@@ -7,9 +7,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class AuthService {
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/UserDB";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "Bin141005";
 
     public boolean registerUser(User user) {
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/UserDB", "root", "Bin141005")) {

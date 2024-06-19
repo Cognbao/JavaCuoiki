@@ -5,6 +5,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseUtil {
     private static final String URL = "jdbc:mysql://localhost:3306/userdb";
@@ -27,25 +29,21 @@ public class DatabaseUtil {
         }
     }
 
-    public static ResultSet getMessageHistory() {
+    public static List<String> getMessageHistory() {
         String sql = "SELECT * FROM chat_messages ORDER BY timestamp ASC";
-        ResultSet rs = null;
+        List<String> messages = new ArrayList<>();
 
-        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            rs = pstmt.executeQuery();
-            return rs;
+        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql); ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                String sender = rs.getString("username");
+                String message = rs.getString("message");
+                messages.add(sender + ": " + message);
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            return null;
-        } finally {
-            // Close ResultSet if not null
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException e) {
-                    System.out.println("Error closing ResultSet: " + e.getMessage());
-                }
-            }
         }
+
+        return messages; // Return the processed data
     }
+
 }
