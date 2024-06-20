@@ -2,12 +2,20 @@ package org.example.test.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
 import org.example.test.model.ChatModel;
+import org.example.test.view.ChatView;
 
 public class ChatController {
-
+    @FXML
+    public BorderPane root;
+    @FXML
+    public TextField recipientField;
+    @FXML
+    public ComboBox recipientComboBox;
     @FXML
     private ListView<String> messageListView;
     @FXML
@@ -20,6 +28,10 @@ public class ChatController {
     // Constructor (inject the ChatModel)
     public ChatController(ChatModel model) {
         this.model = model;
+    }
+
+    public ChatController(ChatModel model, ChatView view) {
+
     }
 
     @FXML

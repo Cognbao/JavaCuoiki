@@ -2,9 +2,6 @@ package org.example.test.model;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
 
 public class ChatModel {
 

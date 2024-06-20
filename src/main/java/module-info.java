@@ -3,6 +3,8 @@ module chat.app {
     requires javafx.fxml;
     requires java.base;
     requires java.sql;
+    requires com.google.protobuf;
+    requires java.desktop;
 
     opens org.example.test.controller to javafx.fxml;
     exports org.example.test.main;

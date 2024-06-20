@@ -1,69 +1,128 @@
 package org.example.test.network;
 
+import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 import org.example.test.model.ChatModel;
+import org.example.test.model.Message;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 
-public class Client {
-    private String serverAddress;
-    private int port;
-    private Socket socket;
-    private BufferedReader in;
-    private PrintWriter out;
+public class Client extends Application implements Runnable {
 
-    public Client(String serverAddress, int port) throws IOException {
-        this.serverAddress = serverAddress;
-        this.port = port;
-        socket = new Socket(serverAddress, port);
-        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        out = new PrintWriter(socket.getOutputStream(), true);
+    private String hostName = "localhost";
+    private int portNumber = 12345;
+    private String username;
+    private org.example.test.view.ChatView view;
+
+    private ObjectOutputStream out;
+    private ObjectInputStream in;
+    private BufferedReader console;
+    private Thread listenerThread;
+
+    public Client(String localhost, int i) {
+
     }
 
     public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
         try {
-            Client client = new Client("localhost", 12345);
-            BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
-            String message;
-            while ((message = console.readLine()) != null) {
-                client.sendMessage(message);
-                System.out.println("Server: " + client.receiveMessage());
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/test/fxml/ChatView.fxml")); // Path to FXML
+            Parent root = loader.load();
+            view = loader.getController(); // Get the ChatView controller from FXML
+            view.getSendButton().setOnAction(event -> sendMessage(view.getInputField().getText()));
+
+            Scene scene = new Scene(root, 400, 400);
+            primaryStage.setScene(scene);
+            username = view.showUsernameDialog();
+            if (username == null || username.trim().isEmpty()) {
+                System.err.println("Invalid username. Exiting.");
+                Platform.exit();
+                return;
             }
-            client.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        listenerThread = new Thread(this);
+        listenerThread.start();
+
+        console = new BufferedReader(new InputStreamReader(System.in));
+        try {
+            while (true) {
+                String message = console.readLine();
+                if (message != null) {
+                    sendMessage(message); // Provide the 'message' String to the method
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void sendMessage(String message) {
-        out.println(message);
-    }
-
-    public String receiveMessage() throws IOException {
-        return in.readLine();
-    }
-
-    public void close() throws IOException {
-        socket.close();
-    }
-    public void startListening(ChatModel model) {
-        // Inside startListening method of Client.java
-        new Thread(() -> {
+        String recipient = view.getSelectedRecipient();
+        if (recipient != null && !message.isEmpty()) {
+            Message msg = new Message(username, recipient, message);
             try {
-                String message;
-                while ((message = receiveMessage()) != null) {
-                    // Create a new final variable to hold the message
-                    final String finalMessage = message;
-                    Platform.runLater(() -> model.addMessage(finalMessage));
-                }
+                out.writeObject(msg);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }).start();
+        }
+    }
+
+    @Override
+    public void run() {
+        try (Socket socket = new Socket(hostName, portNumber)) {
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            // Send username to server
+            out.writeObject(new Message(username, null, null));
+
+            while (true) {
+                try {
+                    Message message = (Message) in.readObject();
+                    if (message.getType() == Message.MessageType.USER_LIST) {
+                        Platform.runLater(() -> view.updateRecipientList(message.getRecipients()));
+                    } else { // This handles both public and private messages
+                        if (message.getRecipient() == null || message.getRecipient().equals(username)) {
+                            // This is a public message or a private message for this client
+                            String formattedMessage = String.format("[%s]: %s", message.getSender(), message.getContent());
+                            Platform.runLater(() -> view.getMessageListView().getItems().add(formattedMessage));
+                        } // Ignore private messages for other clients
+                    }
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Platform.runLater(() -> {
+                view.getMessageListView().getItems().add("Connection to server lost.");
+            });
+        }
+    }
+
+    @Override
+    public void stop() throws Exception {
+        if (out != null) out.close();
+        if (in != null) in.close();
+        if (console != null) console.close();
+    }
+
+    public void startListening(ChatModel model) {
 
     }
 }

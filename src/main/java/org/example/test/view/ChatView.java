@@ -1,36 +1,53 @@
 package org.example.test.view;
 
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.stage.Stage;
 
-public class ChatView {
+import java.net.URL;
+import java.util.List;
+import java.util.ResourceBundle;
+
+public class ChatView extends BorderPane implements Initializable {
+
+    @FXML
     private ListView<String> messageListView;
+    @FXML
     private TextField inputField;
+    @FXML
     private Button sendButton;
-    private BorderPane root;
+    @FXML
+    private ComboBox<String> recipientComboBox;
+    private ObservableList<String> recipients;
 
-    public ChatView(Stage primaryStage) {
-        primaryStage.setTitle("Chat App");
-
+    public ChatView() {
         messageListView = new ListView<>();
         inputField = new TextField();
         sendButton = new Button("Send");
 
-        HBox inputBox = new HBox();
-        inputBox.getChildren().addAll(inputField, sendButton);
+        recipients = FXCollections.observableArrayList();
+        recipientComboBox = new ComboBox<>(recipients);
+        recipientComboBox.setPromptText("Chọn người nhận");
 
-        root = new BorderPane();
-        root.setCenter(messageListView);
-        root.setBottom(inputBox);
+        HBox inputBox = new HBox(10, recipientComboBox, inputField, sendButton);
+        inputBox.setAlignment(Pos.CENTER);
+        inputBox.setPadding(new Insets(10));
 
-        Scene scene = new Scene(root, 400, 400);
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        setCenter(messageListView);
+        setBottom(inputBox);
+    }
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        recipients = FXCollections.observableArrayList();
+        recipientComboBox.setItems(recipients);
+
     }
 
     public ListView<String> getMessageListView() {
@@ -43,5 +60,25 @@ public class ChatView {
 
     public Button getSendButton() {
         return sendButton;
+    }
+
+    public ComboBox<String> getRecipientComboBox() {
+        return recipientComboBox;
+    }
+
+    public void updateRecipientList(List<String> newRecipients) {
+        recipients.setAll(newRecipients);
+    }
+
+    public String getSelectedRecipient() {
+        return recipientComboBox.getValue();
+    }
+
+    public String showUsernameDialog() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Enter Username");
+        dialog.setHeaderText(null);
+        dialog.setContentText("Please enter your username:");
+        return dialog.showAndWait().orElse(null);
     }
 }
