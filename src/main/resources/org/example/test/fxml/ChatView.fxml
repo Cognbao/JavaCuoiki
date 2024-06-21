@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane fx:controller="org.example.test.controller.ChatController" xmlns:fx="http://javafx.com/fxml"
+            fx:id="root">
+    <center>
+        <ListView fx:id="messageListView"/>
+    </center>
+    <bottom>
+        <HBox alignment="CENTER" spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+            <TextField fx:id="recipientField" promptText="Recipient"/>
+            <ComboBox fx:id="recipientComboBox" promptText="Select Recipient"/>
+            <TextField fx:id="inputField"/>
+            <Button fx:id="sendButton" text="Send"/>
+        </HBox>
+    </bottom>
+</BorderPane>
