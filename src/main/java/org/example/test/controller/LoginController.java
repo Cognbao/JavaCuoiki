@@ -12,6 +12,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.example.test.service.AuthService;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.IOException;
 import java.net.URL;
@@ -37,7 +38,14 @@ public class LoginController implements Initializable {
     private Consumer<String> onSuccess;
 
     // No-argument constructor required by FXMLLoader
-    public LoginController() {}
+    public LoginController() {
+        onSuccessfulLogin = new Consumer<String>() {
+            @Override
+            public void accept(String s) {
+
+            }
+        };
+    }
 
     // Constructor with dependency injection
     public LoginController(AuthService authService, Stage primaryStage, Consumer<String> onSuccessfulLogin) {
