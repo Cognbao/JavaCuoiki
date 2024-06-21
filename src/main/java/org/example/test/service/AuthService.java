@@ -1,41 +1,53 @@
 package org.example.test.service;
 
 import org.example.test.model.User;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class AuthService {
 
-    public boolean registerUser(User user) {
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/UserDB", "root", "Bin141005")) {
-            String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, user.getUsername());
-                stmt.setString(2, user.getPassword()); // Consider hashing the password before storing it
-                int rowsAffected = stmt.executeUpdate();
-                return rowsAffected > 0;
-            }
-        } catch (SQLException ex) {
-            Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
+    private static final Logger logger = Logger.getLogger(AuthService.class.getName());
+
+    public boolean registerUser(User user) throws SQLException {
+        String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
+        try (Connection conn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/UserDB?useUnicode=true&characterEncoding=UTF-8", "root", "Bin141005");
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, user.getPassword());
+
+            logger.info("Registering user: " + user.getUsername());
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
         }
     }
 
-    public boolean authenticateUser(String username, String password) {
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/UserDB", "root", "Bin141005")) {
-            String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, username);
-                stmt.setString(2, password); // Make sure this is a hashed comparison in a real app
-                try (ResultSet rs = stmt.executeQuery()) {
-                    return rs.next(); // True if user exists and password matches
+    public boolean authenticateUser(String username, String password) throws SQLException {
+        String sql = "SELECT password FROM users WHERE username = ?";
+        try (Connection conn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/UserDB?useUnicode=true&characterEncoding=UTF-8", "root", "Bin141005");
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, username);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String storedHashedPassword = rs.getString("password");
+
+                    logger.info("Authenticating user: " + username);
+
+                    System.out.println(password);
+                    System.out.println(storedHashedPassword);
+                    System.out.println(BCrypt.checkpw(password, storedHashedPassword));
+                    return BCrypt.checkpw(password, storedHashedPassword);
+                } else {
+                    logger.warning("Authentication failed for user: " + username + " (user not found)");
+                    return false; // User not found
                 }
             }
-        } catch (SQLException ex) {
-            Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
         }
     }
 }

@@ -10,6 +10,6 @@
         <TextField fx:id="usernameField" promptText="Username"/>
         <PasswordField fx:id="passwordField" promptText="Password"/>
         <PasswordField fx:id="confirmPasswordField" promptText="Confirm Password"/>
-        <Button text="Register" fx:id="registerButton"/>
+        <Button text="Register" fx:id="registerButton" onAction="#handleRegister"/>
     </children>
 </VBox>

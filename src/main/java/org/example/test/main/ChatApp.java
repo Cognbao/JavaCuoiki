@@ -32,17 +32,26 @@ public class ChatApp extends Application {
     public void showLoginScreen() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/test/fxml/LoginView.fxml"));
-            LoginController loginController = new LoginController(authService, stage, this::showChatScreen);
-            loader.setController(loginController);
+            System.out.println("Loading LoginView.fxml..."); // Debug statement
             Parent root = loader.load();
+            System.out.println("LoginView.fxml loaded successfully."); // Debug statement
+            LoginController loginController = loader.getController();
+            loginController.setAuthService(authService);
+            loginController.setPrimaryStage(stage);
+            loginController.setOnSuccess(this::showChatScreen);
+            System.out.println("LoginController initialized."); // Debug statement
+
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.show();
+
         } catch (IOException e) {
             System.err.println("Failed to load login screen: " + e.getMessage());
             e.printStackTrace();
         }
     }
+
+
 
 
     private void showChatScreen(String username) {
