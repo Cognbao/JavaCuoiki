@@ -162,6 +162,7 @@ public class Client implements Runnable {
     }
 
     public void disconnect() throws IOException {
+        System.out.println("Disconnecting from server...");
         if (out != null) {
             out.writeObject(new Message(MessageType.LOGOUT, username, null, null));
             out.flush();
@@ -170,6 +171,7 @@ public class Client implements Runnable {
         if (in != null) in.close();
         if (listenerThread != null && listenerThread.isAlive()) {
             listenerThread.interrupt();
+
         }
     }
 

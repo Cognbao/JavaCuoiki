@@ -15,9 +15,14 @@ import org.example.test.network.Client;
 import org.example.test.service.AuthService;
 import org.example.test.view.ChatView;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+
 import java.io.IOException;
 
 public class ChatApp extends Application {
+    private static final Logger logger = Logger.getLogger(ChatApp.class.getName());
     private static Stage stage;
     private static ChatApp instance;
     private AuthService authService;
@@ -61,6 +66,7 @@ public class ChatApp extends Application {
 
     public void showChatScreen(String username) {
         try {
+            logger.info("Initializing chat screen for user: " + username);
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/test/fxml/ChatView.fxml"));
             Parent root = loader.load();
 
@@ -88,7 +94,10 @@ public class ChatApp extends Application {
             new Thread(client).start();
 
         } catch (IOException e) {
-            System.err.println("Failed to load chat screen: " + e.getMessage());
+            logger.log(Level.SEVERE, "Failed to load chat screen", e);
+            e.printStackTrace();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Unexpected error", e);
             e.printStackTrace();
         }
     }

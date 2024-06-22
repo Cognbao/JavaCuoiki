@@ -65,6 +65,7 @@ public class ChatController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        logger.info("ChatController initialize");
         // Initialize UI components and event handlers
         try {
             sendButton.setOnAction(event -> sendMessage());
@@ -79,15 +80,29 @@ public class ChatController implements Initializable {
         if (model == null) {
             throw new IllegalStateException("Model has not been initialized");
         }
-        messageListView.setItems(model.getMessages());
+        logger.info("Initializing model in ChatController");
+        updateMessageList(model.getMessages());
         model.loadMessageHistory();
-        System.out.println("Messages loaded: " + model.getMessages());
+        logger.info("Messages loaded: " + model.getMessages());
+    }
+
+    private void updateMessageList(ObservableList<Message> messages) {
+        messageList.clear();
+        for (Message message : messages) {
+            messageList.add(formatMessage(message));
+        }
+        messageListView.setItems(messageList);
+    }
+
+    private String formatMessage(Message message) {
+        return String.format("[%s]: %s", message.getSender(), message.getContent());
     }
 
     private void handleRecipientChange(ActionEvent event) {
         try {
             currentRecipient = recipientComboBox.getValue();
             model.loadMessageHistory(currentRecipient); // Reload chat history for the selected recipient
+            updateMessageList(model.getMessages());
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error handling recipient change", e);
         }
@@ -97,7 +112,7 @@ public class ChatController implements Initializable {
         Platform.runLater(() -> {
             try {
                 if (message.getRecipient() == null || message.getRecipient().equals(client.getUsername())) {
-                    String formattedMessage = String.format("[%s]: %s", message.getSender(), message.getContent());
+                    String formattedMessage = formatMessage(message);
                     messageList.add(formattedMessage);
                 }
             } catch (Exception e) {

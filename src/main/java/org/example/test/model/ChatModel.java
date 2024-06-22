@@ -6,6 +6,11 @@ import javafx.collections.ObservableList;
 import org.example.test.network.Client;
 import org.example.test.service.MessageService;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -15,18 +20,18 @@ public class ChatModel {
 
     private static final Logger logger = Logger.getLogger(ChatModel.class.getName());
 
-    private final ObservableList<String> messages = FXCollections.observableArrayList();
-    private MessageService messageService; // Assuming you have this class
+    private final ObservableList<Message> messages = FXCollections.observableArrayList();
+    private MessageService messageService;
     private Consumer<Message> newMessageListener;
     private Client client;
 
     public ChatModel(Client client) {
         this.client = client;
-        messageService = new MessageService(); // Initialize your MessageService
+        messageService = new MessageService();
         messageService.registerNewMessageListener(this::onNewMessage);
     }
 
-    public ObservableList<String> getMessages() {
+    public ObservableList<Message> getMessages() {
         return messages;
     }
 
@@ -38,40 +43,73 @@ public class ChatModel {
         Message message = new Message(username, recipient, content);
         try {
             Client.getInstance().sendMessage(content, recipient);
-            // After successfully sending, call the listener with the new message
             onNewMessage(message);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error sending message: " + e.getMessage(), e);
-            // Handle the error, e.g., display an error message to the user.
         }
     }
 
-    // Load initial message history
     public void loadMessageHistory() {
-        loadMessageHistory(null); // Load all messages (both public and private) initially
-    }
+        List<Message> messageList = new ArrayList<>();
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM messages WHERE sender_id = ? OR recipient_id = ?")) {
+            String username = client.getUsername();
+            stmt.setString(1, username);
+            stmt.setString(2, username);
 
-    // Load message history for a specific recipient (null for all messages)
-    public void loadMessageHistory(String recipient) {
-        List<String> history = messageService.getMessageHistory(recipient);
-        if (history != null) {
-            messages.clear();
-            messages.addAll(history);
-        } else {
-            messages.clear();
+            logger.info("Executing query to load message history for user: " + username);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String sender = rs.getString("sender");
+                    String recipient = rs.getString("recipient");
+                    String content = rs.getString("content");
+                    logger.info("Retrieved message from DB - Sender: " + sender + ", Recipient: " + recipient + ", Content: " + content);
+                    Message message = new Message(sender, recipient, content);
+                    messageList.add(message);
+                }
+            }
+            logger.info("Loaded " + messageList.size() + " messages from the database for user: " + username);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error loading messages from the database", e);
         }
+        this.messages.setAll(messageList);
     }
 
-    //Register a listener to receive new message notification.
+    public void loadMessageHistory(String recipient) {
+        List<Message> messageList = new ArrayList<>();
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM messages WHERE (sender_id = ? AND recipient_id = ?) OR (sender = ? AND recipient = ?)")) {
+            String username = client.getUsername();
+            stmt.setString(1, username);
+            stmt.setString(2, recipient);
+            stmt.setString(3, recipient);
+            stmt.setString(4, username);
+
+            logger.info("Executing query to load message history between user: " + username + " and recipient: " + recipient);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String sender = rs.getString("sender");
+                    String recipientName = rs.getString("recipient");
+                    String content = rs.getString("content");
+                    logger.info("Retrieved message from DB - Sender: " + sender + ", Recipient: " + recipientName + ", Content: " + content);
+                    Message message = new Message(sender, recipientName, content);
+                    messageList.add(message);
+                }
+            }
+            logger.info("Loaded " + messageList.size() + " messages from the database between user: " + username + " and recipient: " + recipient);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error loading messages from the database", e);
+        }
+        this.messages.setAll(messageList);
+    }
+
     public void addNewMessageListener(Consumer<Message> listener) {
         this.newMessageListener = listener;
     }
 
-    //Invoke the listener when a new message is received.
     private void onNewMessage(Message message) {
         if (newMessageListener != null) {
             Platform.runLater(() -> newMessageListener.accept(message));
         }
     }
 }
-
