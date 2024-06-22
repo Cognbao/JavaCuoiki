@@ -14,6 +14,7 @@ import org.example.test.network.Client;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class ChatView extends BorderPane implements Initializable {
@@ -108,9 +109,21 @@ public class ChatView extends BorderPane implements Initializable {
 
     public void setClient(Client client) {
         this.client = client;
+        System.out.println("Client set in ChatView: " + client); // Optional: Add this line for debugging
     }
 
-    public boolean showFriendRequestDialog(String sender) {
+    public boolean showFriendRequestDialog(String requester) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Friend Request");
+        alert.setHeaderText(null);
+        alert.setContentText(requester + " wants to add you as a friend.");
 
+        ButtonType acceptButton = new ButtonType("Accept");
+        ButtonType declineButton = new ButtonType("Decline");
+
+        alert.getButtonTypes().setAll(acceptButton, declineButton);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get() == acceptButton; // Return true if accepted
     }
 }

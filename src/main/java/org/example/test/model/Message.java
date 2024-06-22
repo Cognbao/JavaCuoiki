@@ -98,6 +98,7 @@ public class Message implements Serializable {
         FRIEND_REQUEST,
         FRIEND_RESPONSE,
         GET_HISTORY,
+        LOGOUT,
     }
 
 }

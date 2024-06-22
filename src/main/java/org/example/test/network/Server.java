@@ -10,6 +10,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.example.test.model.Message.MessageType.LOGOUT;
+
 public class Server {
     private static final int PORT = 12345;
     private static final List<ClientThread> clients = new ArrayList<>();
@@ -39,11 +41,13 @@ public class Server {
         }
     }
 
-    private static void forwardMessage(Message message, ClientThread sender) {
-        if (message.getRecipient() == null) { // Broadcast to all clients
-            for (ClientThread client : clients) {
-                client.sendMessage(message);
+    public static void forwardMessage(Message message, ClientThread sender) {
+        if(message.getType() == LOGOUT){
+            synchronized (clients) {
+                clients.remove(sender);
+                broadcastUserList();
             }
+            return;
         } else { // Private message
             for (ClientThread client : clients) {
                 if (client != sender && client.getUsername().equals(message.getRecipient())) {

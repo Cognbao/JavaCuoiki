@@ -221,4 +221,14 @@ public class Client extends Application implements Runnable {
             // Handle the error appropriately
         }
     }
+
+    public void disconnect() throws IOException {
+        if (out != null) {
+            out.writeObject(new Message(MessageType.LOGOUT, username, null, null));
+            out.flush();
+            out.close();
+        }
+        if (in != null) in.close();
+        listenerThread.interrupt();
+    }
 }

@@ -5,20 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b88a1792-dbb4-4b5a-9c92-3939a681d6c9" name="Changes" comment="fixed a">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/3abdc621-c39c-4b7c-94d9-d5811bda77b4.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/3abdc621-c39c-4b7c-94d9-d5811bda77b4.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/module-info.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/controller/AddFriendController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/controller/AddFriendController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/controller/ChatController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/controller/ChatController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/controller/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/controller/LoginController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/main/ChatApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/main/ChatApp.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/model/Message.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/model/Message.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/network/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/network/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/network/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/network/Server.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/view/ChatView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/view/ChatView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/org/example/test/fxml/AddFriendView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/org/example/test/fxml/AddFriendView.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/org/example/test/fxml/ChatView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/org/example/test/fxml/ChatView.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/org/example/test/fxml/LoginView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/org/example/test/fxml/LoginView.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,6 +25,7 @@
         <option value="FxmlFile" />
         <option value="CSS File" />
         <option value="Class" />
+        <option value="AnnotationType" />
       </list>
     </option>
   </component>
@@ -83,7 +78,7 @@
     "project.structure.last.edited": "Libraries",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
+    "settings.editor.selected.configurable": "reference.settings.project.maven.repository.indices",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
@@ -93,6 +88,9 @@
   }
 }]]></component>
   <component name="RecentsManager">
+    <key name="CreateClassDialog.RecentsKey">
+      <recent name="org.example.test.view" />
+    </key>
     <key name="ExtractSuperBase.RECENT_KEYS">
       <recent name="org.example.test.controller" />
     </key>
@@ -187,7 +185,7 @@
       <workItem from="1718905196361" duration="3008000" />
       <workItem from="1718992250936" duration="2227000" />
       <workItem from="1719054761246" duration="19000" />
-      <workItem from="1719054962927" duration="6513000" />
+      <workItem from="1719054962927" duration="10857000" />
     </task>
     <task id="LOCAL-00001" summary="fixed">
       <option name="closed" value="true" />

@@ -121,8 +121,8 @@ public class LoginController implements Initializable {
         this.primaryStage = stage;
     }
 
-    public void setOnSuccess(Object showChatScreen) {
-        this.onSuccessfulLogin.accept((String) showChatScreen);
+    public void setOnSuccess(Consumer<String> onSuccess) {
+        this.onSuccessfulLogin = onSuccess;
     }
 
     public String getUsername() {

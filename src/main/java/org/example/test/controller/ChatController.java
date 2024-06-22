@@ -36,6 +36,8 @@ public class ChatController implements Initializable {
     private TextField inputField;
     @FXML
     private Button sendButton;
+    @FXML
+    private ChatView view;
 
     private ChatModel model;
     private Client client;
@@ -43,7 +45,15 @@ public class ChatController implements Initializable {
     private String currentRecipient;
     private ObservableList<String> messageList = FXCollections.observableArrayList();
     private Runnable onClose;
-    private ChatView view;
+
+
+    public ChatController(){
+
+    }
+
+    public ChatView getView(){
+        return view;
+    }
 
     public ChatController(Client client, Stage stage, Runnable onClose) { // Removed showLoginScreen parameter
         this.client = client;
@@ -88,7 +98,7 @@ public class ChatController implements Initializable {
     public void setPrimaryStage(Stage stage) {
     }
 
-    public void setOnClose(Object showLoginScreen) {
-
+    public void setOnClose(Runnable onClose) {
+        this.onClose = onClose;
     }
 }

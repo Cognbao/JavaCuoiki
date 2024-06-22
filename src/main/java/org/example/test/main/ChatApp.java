@@ -17,6 +17,10 @@ public class ChatApp extends Application {
     private static Stage stage; // Assuming you have this declared somewhere
     private AuthService authService;
 
+    public static void main(String[] args) {
+        launch(args);
+    }
+
     @Override
     public void start(Stage primaryStage) {
         stage = primaryStage;
@@ -26,18 +30,21 @@ public class ChatApp extends Application {
 
     public void showLoginScreen() {
         try {
+            // Load the FXML file for the login screen
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/test/fxml/LoginView.fxml"));
             Parent root = loader.load();
 
+            // Get the controller for the login screen and set necessary services
             LoginController loginController = loader.getController();
             loginController.setAuthService(authService);
             loginController.setStage(stage);
 
-            // Use a lambda expression to adapt the showChatScreen method
-            loginController.setOnSuccess(() -> { //use Runnable instead of Consumer<String>
-                showChatScreen(loginController.getUsername());
+            // Use a lambda expression to handle successful login
+            loginController.setOnSuccess(username -> {
+                showChatScreen(username); // Ensure showChatScreen is not static if called from an instance context
             });
 
+            // Set the scene and show the login screen
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.show();
@@ -47,28 +54,33 @@ public class ChatApp extends Application {
         }
     }
 
-    public void showChatScreen(String username) { // This method is not static
+    public void showChatScreen(String username) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/test/fxml/ChatView.fxml"));
-            Parent root = loader.load();
+            Parent root = loader.load(); // Load the FXML first
 
+            // Get the controller instance that FXMLLoader created
+            ChatController chatController = loader.getController();
+
+            // Now create Client instance after ChatView is loaded
             ChatView chatView = loader.getController();
             Client client = new Client(chatView, "localhost", 12345, username);
-            chatView.setClient(client);
+            chatView.setClient(client); // Set the client for the view
 
-            ChatController chatController = loader.getController();
-            chatController.setView(chatView);
-            chatController.setClient(client);
-            chatController.setPrimaryStage(stage);
-            chatController.setOnClose(() -> {
-                showLoginScreen(); // Now the lambda calls showLoginScreen without arguments
-            });
-            Scene scene = new Scene(root);
+            // chatController.setView(chatView); this line is no longer needed
+
+            Scene scene = new Scene(root, 400, 400);
             stage.setScene(scene);
             stage.setTitle("Chat App - " + username);
+            stage.setOnCloseRequest(event -> {
+                try {
+                    client.disconnect();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
             stage.show();
 
-            // Start the client's listening thread
             new Thread(client).start();
 
         } catch (IOException e) {
@@ -77,3 +89,4 @@ public class ChatApp extends Application {
         }
     }
 }
+
