@@ -1,45 +1,41 @@
-package org.example.test.model;
+package org.example.test.model; // Adjust the package to your project structure
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DatabaseUtil {
-    private static final String URL = "jdbc:mysql://localhost:3306/userdb";
-    private static final String USER = "root"; // Replace with your MySQL username
-    private static final String PASSWORD = "Bin141005"; // Replace with your MySQL password
 
-    public static Connection connect() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+    private static final Logger logger = Logger.getLogger(DatabaseUtil.class.getName());
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/UserDB"; // Update with your actual database details
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "Bin141005"; // Update with your actual password
+
+    // Private constructor to prevent instantiation
+    private DatabaseUtil() {
     }
 
-    public static void insertMessage(String username, String message) {
-        String sql = "INSERT INTO chat_messages(username, message, timestamp) VALUES(?, ?, NOW())";
+    // Get a database connection
+    public static Connection getConnection() throws SQLException {
+        logger.info("Attempting to connect to the database...");
 
-        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, username);
-            pstmt.setString(2, message);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    public static List<String> getMessageHistory() {
-        String sql = "SELECT * FROM chat_messages ORDER BY timestamp ASC";
-        List<String> messages = new ArrayList<>();
-
-        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql); ResultSet rs = pstmt.executeQuery()) {
-            while (rs.next()) {
-                String sender = rs.getString("username");
-                String message = rs.getString("message");
-                messages.add(sender + ": " + message);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
+        try {
+            // Load the MySQL JDBC driver (if needed)
+            Class.forName("com.mysql.cj.jdbc.Driver"); // Replace with the correct driver class if using a different database
+        } catch (ClassNotFoundException e) {
+            logger.log(Level.SEVERE, "Error loading database driver", e);
+            throw new SQLException("Could not load database driver.", e);
         }
 
-        return messages; // Return the processed data
+        try {
+            Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            logger.info("Connected to the database successfully!");
+            return conn;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error connecting to the database", e);
+            throw e;  // Re-throw the exception so the caller can handle it
+        }
     }
-
 }

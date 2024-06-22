@@ -2,18 +2,15 @@ package org.example.test.controller;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.example.test.main.ChatApp;
 import org.example.test.service.AuthService;
 
-import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
@@ -30,14 +27,14 @@ public class LoginController implements Initializable {
     @FXML
     private Button registerButton;
 
-    // Dependencies (to be injected)
+    // Dependencies
     private AuthService authService;
     private Stage primaryStage;
     private Consumer<String> onSuccessfulLogin;
 
+    // No-argument constructor required by FXMLLoader
     public LoginController() {
     }
-    // No-argument constructor required by FXMLLoader
 
     // Constructor with dependency injection
     public LoginController(AuthService authService, Stage primaryStage, Consumer<String> onSuccessfulLogin) {
@@ -48,15 +45,21 @@ public class LoginController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // This method is called after the FXML file has been loaded
-        // You can initialize elements and set up event handlers here
+        loginButton.setOnAction(event -> {
+            try {
+                handleLogin(event);
+            } catch (SQLException e) {
+                e.printStackTrace(); // Or handle the exception in a more user-friendly way
+            }
+        });
 
-        loginButton.setOnAction(this::handleLogin);
-        registerButton.setOnAction(this::handleRegister);
+        registerButton.setOnAction(event -> {
+            handleRegister(event);
+        });
     }
 
     @FXML
-    private void handleLogin(ActionEvent event) {
+    private void handleLogin(ActionEvent event) throws SQLException {
         String username = usernameField.getText().trim();
         String password = passwordField.getText();
 
@@ -67,9 +70,9 @@ public class LoginController implements Initializable {
 
         try {
             // Attempt Authentication
-            if (authService != null && authService.authenticateUser(username, password)) {
+            if (authService.authenticateUser(username, password)) {
                 onSuccessfulLogin.accept(username);
-                primaryStage.close();
+                primaryStage.close(); // Close the login window
             } else {
                 // More specific error message
                 showAlert(Alert.AlertType.ERROR, "Login Error", "Invalid username or password.");
@@ -82,18 +85,13 @@ public class LoginController implements Initializable {
 
     @FXML
     private void handleRegister(ActionEvent event) {
-        System.out.println("Register button clicked"); // Debug statement
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/test/fxml/RegisterView.fxml"));
-            Parent root = loader.load();
-            Scene scene = new Scene(root);
-            Stage registerStage = new Stage();
-            registerStage.setScene(scene);
-            registerStage.show();
-        } catch (IOException e) {
-            System.err.println("Failed to load register screen: " + e.getMessage());
-            e.printStackTrace();
-        }
+        // Switch to registration screen
+        ChatApp.getInstance().showRegisterScreen();
+        primaryStage.close();
+    }
+
+    public String getUsername() {
+        return usernameField.getText();
     }
 
     // Setters for dependency injection
@@ -101,11 +99,11 @@ public class LoginController implements Initializable {
         this.authService = authService;
     }
 
-    public void setPrimaryStage(Stage primaryStage) {
+    public void setStage(Stage primaryStage) {
         this.primaryStage = primaryStage;
     }
 
-    public void setOnSuccessfulLogin(Consumer<String> onSuccessfulLogin) {
+    public void setOnSuccess(Consumer<String> onSuccessfulLogin) {
         this.onSuccessfulLogin = onSuccessfulLogin;
     }
 
@@ -115,17 +113,5 @@ public class LoginController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
-    }
-
-    public void setStage(Stage stage) {
-        this.primaryStage = stage;
-    }
-
-    public void setOnSuccess(Consumer<String> onSuccess) {
-        this.onSuccessfulLogin = onSuccess;
-    }
-
-    public String getUsername() {
-        return usernameField.getText();
     }
 }

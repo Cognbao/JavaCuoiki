@@ -4,11 +4,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import org.example.test.controller.ChatController;
 import org.example.test.network.Client;
 
@@ -31,56 +28,27 @@ public class ChatView extends BorderPane implements Initializable {
     private Button addFriendButton;
 
     private Client client;
-    private ObservableList<String> recipients;
     private ChatController controller;
-    private Button getAddFriendButton;
-
-    public ChatView() {
-        messageListView = new ListView<>();
-        inputField = new TextField();
-        sendButton = new Button("Send");
-
-        recipients = FXCollections.observableArrayList();
-        recipientComboBox = new ComboBox<>(recipients);
-        recipientComboBox.setPromptText("Chọn người nhận");
-
-        HBox inputBox = new HBox(10, recipientComboBox, inputField, sendButton);
-        inputBox.setAlignment(Pos.CENTER);
-        inputBox.setPadding(new Insets(10));
-
-        setCenter(messageListView);
-        setBottom(inputBox);
-    }
+    private ObservableList<String> messageList = FXCollections.observableArrayList();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        recipients = FXCollections.observableArrayList();
-        recipientComboBox.setItems(recipients);
-
+        messageListView.setItems(messageList);
     }
 
-    public ListView<String> getMessageListView() {
-        return messageListView;
+    public Client getClient() {
+        return client;
     }
 
-    public TextField getInputField() {
-        return inputField;
+    public void setClient(Client client) {
+        this.client = client;
     }
 
-    public Button getSendButton() {
-        return sendButton;
-    }
-
-    public ComboBox<String> getRecipientComboBox() {
-        return recipientComboBox;
-    }
+    // ... other getter methods ...
 
     public void updateRecipientList(List<String> newRecipients) {
-        recipients.setAll(newRecipients);
-    }
-
-    public String getSelectedRecipient() {
-        return recipientComboBox.getValue();
+        recipientComboBox.getItems().clear();
+        recipientComboBox.getItems().addAll(newRecipients);
     }
 
     public String showUsernameDialog() {
@@ -91,25 +59,8 @@ public class ChatView extends BorderPane implements Initializable {
         return dialog.showAndWait().orElse(null);
     }
 
-    public void setController(ChatController controller) {
-        this.controller = controller;
-    }
-
-    public Button getAddFriendButton() {
-        return addFriendButton;
-    }
-
-    public void updateMessageList(List<String> messages) {
-        messageListView.getItems().addAll(messages);
-    }
-
-    public Client getClient() {
-        return client;
-    }
-
-    public void setClient(Client client) {
-        this.client = client;
-        System.out.println("Client set in ChatView: " + client); // Optional: Add this line for debugging
+    public void setController(ChatController chatController) {
+        this.controller = chatController;
     }
 
     public boolean showFriendRequestDialog(String requester) {
@@ -125,5 +76,14 @@ public class ChatView extends BorderPane implements Initializable {
 
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == acceptButton; // Return true if accepted
+    }
+
+    public void updateMessageList(List<String> messages) {
+        messageListView.getItems().clear(); // Clear previous messages
+        messageListView.getItems().addAll(messages); // Add new messages
+    }
+
+    public ListView<String> getMessageListView() {
+        return messageListView;
     }
 }

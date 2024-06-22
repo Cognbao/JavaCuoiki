@@ -4,12 +4,16 @@ import java.io.Serializable;
 import java.util.List;
 
 public class Message implements Serializable {
+
+    // Message attributes
     private MessageType type;
     private String sender;
-    private String recipient;
+    private String recipient; // Null for public messages
     private String content;
+    // For USER_LIST messages
     private List<String> recipients;
-    private List<String> messageHistory; // Field to store message history
+    // For GET_HISTORY and MESSAGE_HISTORY messages
+    private List<String> messageHistory; // Store message history for a specific conversation
 
     // Constructor for regular messages
     public Message(String sender, String recipient, String content) {
@@ -25,7 +29,7 @@ public class Message implements Serializable {
         this.recipients = recipients;
     }
 
-    // Constructor for friend requests
+    // Constructor for friend requests and responses
     public Message(MessageType type, String sender, String recipient, String content) {
         this.type = type;
         this.sender = sender;
@@ -46,14 +50,15 @@ public class Message implements Serializable {
         this.messageHistory = messageHistory;
     }
 
-    // Getters
-    public MessageType getType() {
-        return type;
+    // Constructor for LOGOUT messages
+    public Message(MessageType type, String sender) {
+        this.type = type;
+        this.sender = sender;
     }
 
-    // Setters (You may not need all of these)
-    public void setType(MessageType type) {
-        this.type = type;
+    // Getters and setters
+    public MessageType getType() {
+        return type;
     }
 
     public String getSender() {
@@ -92,13 +97,18 @@ public class Message implements Serializable {
         return messageHistory;
     }
 
+    public void setMessageHistory(List<String> messageHistory) {
+        this.messageHistory = messageHistory;
+    }
+
+    // Define message types
     public enum MessageType {
         USER_LIST,
         MESSAGE,
         FRIEND_REQUEST,
         FRIEND_RESPONSE,
         GET_HISTORY,
-        LOGOUT,
+        MESSAGE_HISTORY,
+        LOGOUT
     }
-
 }

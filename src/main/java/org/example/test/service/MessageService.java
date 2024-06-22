@@ -1,6 +1,7 @@
 package org.example.test.service;
 
 import org.example.test.model.DatabaseUtil;
+import org.example.test.model.Message;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -8,112 +9,88 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ManageService {
-    private static final Logger logger = Logger.getLogger(ManageService.class.getName());
+public class MessageService {
+    private static final Logger logger = Logger.getLogger(MessageService.class.getName());
+    private static MessageService messageService; // Keep it private
+    private List<Consumer<Message>> newMessageListeners = new CopyOnWriteArrayList<>(); // Thread-safe list of listeners
 
-    public boolean sendFriendRequest(String requester, String recipient) throws SQLException {
-        String sql = "INSERT INTO friend_requests (requester, recipient) VALUES (?, ?)";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    // Add a new message listener
+    public static MessageService getMessageService() {
+        return messageService;
+    }
 
-            stmt.setString(1, requester);
-            stmt.setString(2, recipient);
+    public void registerNewMessageListener(Consumer<Message> listener) {
+        newMessageListeners.add(listener);
+    }
 
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
+    // Call all registered listeners when a new message is received
+    private void notifyNewMessage(Message message) {
+        for (Consumer<Message> listener : newMessageListeners) {
+            listener.accept(message);
         }
     }
 
-    public boolean acceptFriendRequest(String requester, String recipient) throws SQLException {
-        // Step 1: Remove the friend request from the friend_requests table
-        String deleteSql = "DELETE FROM friend_requests WHERE requester = ? AND recipient = ?";
+    public void saveMessage(Message message) throws SQLException {
+        String sql = "INSERT INTO chat_messages (sender, recipient, content) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, message.getSender());
+            stmt.setString(2, message.getRecipient());
+            stmt.setString(3, message.getContent());
 
-            stmt.setString(1, requester);
-            stmt.setString(2, recipient);
             stmt.executeUpdate();
-        }
-
-        // Step 2: Insert the friendship into the friendships table
-        String insertSql = "INSERT INTO friendships (user1, user2) VALUES (?, ?)";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(insertSql)) {
-
-            stmt.setString(1, requester);
-            stmt.setString(2, recipient);
-            stmt.executeUpdate();
-
-            stmt.setString(1, recipient);
-            stmt.setString(2, requester);
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
+            logger.info("Message saved to database: " + message.getContent());
+            notifyNewMessage(message);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error saving message to database: ", e);
+            throw e;
         }
     }
 
-    public boolean declineFriendRequest(String requester, String recipient) throws SQLException {
-        String sql = "DELETE FROM friend_requests WHERE requester = ? AND recipient = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    public List<String> getMessageHistory(String user1, String user2) {
+        // Retrieve message history for a conversation between user1 and user2 (or all messages if user2 is null)
+        List<String> messages = new ArrayList<>();
+        String sql;
 
-            stmt.setString(1, requester);
-            stmt.setString(2, recipient);
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
+        if (user2 == null) {
+            sql = "SELECT sender, content FROM chat_messages WHERE recipient IS NULL OR sender = ? OR recipient = ?";
+        } else {
+            sql = "SELECT sender, content FROM chat_messages WHERE (sender = ? AND recipient = ?) OR (sender = ? AND recipient = ?)";
         }
-    }
-    public List<String> getPendingFriendRequests(String username) {
-        String sql = "SELECT requester FROM friend_requests WHERE recipient = ?";
-        List<String> requests = new ArrayList<>();
+
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, username);
+            if (user2 == null) {
+                stmt.setString(1, user1);
+                stmt.setString(2, user1);
+            } else {
+                stmt.setString(1, user1);
+                stmt.setString(2, user2);
+                stmt.setString(3, user2);
+                stmt.setString(4, user1);
+            }
+
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    requests.add(rs.getString("requester"));
+                    String sender = rs.getString("sender");
+                    String content = rs.getString("content");
+                    messages.add("[" + sender + "]: " + content);
                 }
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error getting pending friend requests", e);
+            logger.log(Level.SEVERE, "Error retrieving message history", e);
         }
-        return requests;
+        return messages;
     }
 
-    public List<String> getFriendList(String username) throws SQLException {
-        List<String> friends = new ArrayList<>();
-        String sql = "SELECT user2 FROM friendships WHERE user1 = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, username);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    friends.add(rs.getString("user2"));
-                }
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error retrieving friend list", e);
-        }
-        return friends;
+    public List<String> getMessageHistory(String user1) {
+        // Call the two-argument version with user2 = null to get all messages for user1
+        return getMessageHistory(user1, null);
     }
-
-    public boolean areFriends(String user1, String user2) throws SQLException {
-        String sql = "SELECT * FROM friendships WHERE (user1 = ? AND user2 = ?) OR (user1 = ? AND user2 = ?)";
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, user1);
-            stmt.setString(2, user2);
-            stmt.setString(3, user2);
-            stmt.setString(4, user1);
-            try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next(); // Returns true if a row is found (they are friends)
-            }
-        }
-    }
-
 }

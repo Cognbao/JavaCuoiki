@@ -1,7 +1,9 @@
 package org.example.test.controller;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -11,94 +13,133 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.example.test.model.ChatModel;
+import org.example.test.model.Message;
 import org.example.test.network.Client;
 import org.example.test.view.ChatView;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ChatController implements Initializable {
+    private static final Logger logger = Logger.getLogger(ChatController.class.getName());
+    private ChatView view;
 
     @FXML
-    public BorderPane root;
-    @FXML
-    public TextField recipientField;
-    @FXML
-    public ComboBox recipientComboBox;
-    @FXML
     private ListView<String> messageListView;
+    @FXML
+    private TextField recipientField;
+    @FXML
+    private ComboBox<String> recipientComboBox;
     @FXML
     private TextField inputField;
     @FXML
     private Button sendButton;
     @FXML
-    private ChatView view;
+    private Button addFriendButton;
 
-    private ChatModel model;
     private Client client;
-    private Stage primaryStage;
-    private String currentRecipient;
-    private ObservableList<String> messageList = FXCollections.observableArrayList();
-    private Runnable onClose;
+    private ChatModel model;
+    private String currentRecipient; // Keep track of the currently selected recipient
+    private ObservableList<String> messageList = FXCollections.observableArrayList(); // Observable list for messages
 
-
-    public ChatController(){
-
+    public ChatController() {
     }
 
-    public ChatView getView(){
-        return view;
+    public void setModel(ChatModel model) {
+        this.model = model;
+        try {
+            initializeModel();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error initializing model", e);
+        }
     }
 
-    public ChatController(Client client, Stage stage, Runnable onClose) { // Removed showLoginScreen parameter
+    public void setClient(Client client) {
         this.client = client;
-        this.primaryStage = stage;
-        this.onClose = onClose;
     }
 
-    @FXML
-    public void handleAddFriend() {
-        showAddFriendDialog();
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        // Initialize UI components and event handlers
+        try {
+            sendButton.setOnAction(event -> sendMessage());
+            addFriendButton.setOnAction(event -> showAddFriendDialog());
+            recipientComboBox.setOnAction(this::handleRecipientChange);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error during initialization", e);
+        }
     }
 
-    // Method to open the AddFriendView dialog
+    public void initializeModel() {
+        if (model == null) {
+            throw new IllegalStateException("Model has not been initialized");
+        }
+        messageListView.setItems(model.getMessages());
+        model.loadMessageHistory();
+        System.out.println("Messages loaded: " + model.getMessages());
+    }
+
+    private void handleRecipientChange(ActionEvent event) {
+        try {
+            currentRecipient = recipientComboBox.getValue();
+            model.loadMessageHistory(currentRecipient); // Reload chat history for the selected recipient
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error handling recipient change", e);
+        }
+    }
+
+    public void appendMessage(Message message) {
+        Platform.runLater(() -> {
+            try {
+                if (message.getRecipient() == null || message.getRecipient().equals(client.getUsername())) {
+                    String formattedMessage = String.format("[%s]: %s", message.getSender(), message.getContent());
+                    messageList.add(formattedMessage);
+                }
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Error appending message", e);
+            }
+        });
+    }
+
     private void showAddFriendDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/test/fxml/AddFriendView.fxml"));
             Parent root = loader.load();
 
             AddFriendController addFriendController = loader.getController();
-            addFriendController.setClient(view.getClient());
-
+            addFriendController.setClient(client);
             Scene scene = new Scene(root);
             Stage stage = new Stage();
             stage.setScene(scene);
             stage.show();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Error showing Add Friend dialog", e);
         }
     }
 
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-
+    private void sendMessage() {
+        try {
+            String messageText = inputField.getText();
+            if (!messageText.isEmpty()) {
+                model.sendMessage(client.getUsername(), messageText);
+                System.out.println("Message sent to model.");
+                inputField.clear();
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error sending message", e);
+        }
     }
 
-    public void setView(ChatView chatView) {
+    public ChatView getView() {
+        return view;
     }
 
-    public void setClient(Client client) {
-    }
-
-    public void setPrimaryStage(Stage stage) {
-    }
-
-    public void setOnClose(Runnable onClose) {
-        this.onClose = onClose;
+    public void setView(ChatView view) {
+        this.view = view;
     }
 }
