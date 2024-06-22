@@ -9,6 +9,8 @@ public class Message implements Serializable {
     private String recipient;
     private String content;
     private List<String> recipients;
+    private List<String> messageHistory; // Field to store message history
+
     // Constructor for regular messages
     public Message(String sender, String recipient, String content) {
         this.type = MessageType.MESSAGE;
@@ -21,6 +23,27 @@ public class Message implements Serializable {
     public Message(List<String> recipients) {
         this.type = MessageType.USER_LIST;
         this.recipients = recipients;
+    }
+
+    // Constructor for friend requests
+    public Message(MessageType type, String sender, String recipient, String content) {
+        this.type = type;
+        this.sender = sender;
+        this.recipient = recipient;
+        this.content = content;
+    }
+
+    // Constructor for message history request
+    public Message(MessageType type, String sender, String recipient) {
+        this.type = type;
+        this.sender = sender;
+        this.recipient = recipient;
+    }
+
+    // Constructor for message history response
+    public Message(MessageType type, List<String> messageHistory) {
+        this.type = type;
+        this.messageHistory = messageHistory;
     }
 
     // Getters
@@ -65,8 +88,16 @@ public class Message implements Serializable {
         this.recipients = recipients;
     }
 
+    public List<String> getMessageHistory() {
+        return messageHistory;
+    }
+
     public enum MessageType {
         USER_LIST,
-        MESSAGE
+        MESSAGE,
+        FRIEND_REQUEST,
+        FRIEND_RESPONSE,
+        GET_HISTORY,
     }
+
 }

@@ -9,6 +9,8 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import org.example.test.controller.ChatController;
+import org.example.test.network.Client;
 
 import java.net.URL;
 import java.util.List;
@@ -24,7 +26,13 @@ public class ChatView extends BorderPane implements Initializable {
     private Button sendButton;
     @FXML
     private ComboBox<String> recipientComboBox;
+    @FXML
+    private Button addFriendButton;
+
+    private Client client;
     private ObservableList<String> recipients;
+    private ChatController controller;
+    private Button getAddFriendButton;
 
     public ChatView() {
         messageListView = new ListView<>();
@@ -80,5 +88,29 @@ public class ChatView extends BorderPane implements Initializable {
         dialog.setHeaderText(null);
         dialog.setContentText("Please enter your username:");
         return dialog.showAndWait().orElse(null);
+    }
+
+    public void setController(ChatController controller) {
+        this.controller = controller;
+    }
+
+    public Button getAddFriendButton() {
+        return addFriendButton;
+    }
+
+    public void updateMessageList(List<String> messages) {
+        messageListView.getItems().addAll(messages);
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
+    }
+
+    public boolean showFriendRequestDialog(String sender) {
+
     }
 }

@@ -6,6 +6,7 @@ module chat.app {
     requires com.google.protobuf;
     requires java.desktop;
     requires jbcrypt;
+    requires mysql.connector.java;
 
     opens org.example.test.controller to javafx.fxml;
     exports org.example.test.main;

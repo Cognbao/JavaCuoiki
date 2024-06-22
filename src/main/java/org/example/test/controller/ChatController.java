@@ -1,15 +1,29 @@
 package org.example.test.controller;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 import org.example.test.model.ChatModel;
+import org.example.test.network.Client;
 import org.example.test.view.ChatView;
 
-public class ChatController {
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+
+
+public class ChatController implements Initializable {
+
     @FXML
     public BorderPane root;
     @FXML
@@ -24,47 +38,57 @@ public class ChatController {
     private Button sendButton;
 
     private ChatModel model;
+    private Client client;
+    private Stage primaryStage;
+    private String currentRecipient;
+    private ObservableList<String> messageList = FXCollections.observableArrayList();
+    private Runnable onClose;
+    private ChatView view;
 
-    // Constructor (inject the ChatModel)
-    public ChatController(ChatModel model) {
-        this.model = model;
-    }
-
-    public ChatController(ChatModel model, ChatView view) {
-
+    public ChatController(Client client, Stage stage, Runnable onClose) { // Removed showLoginScreen parameter
+        this.client = client;
+        this.primaryStage = stage;
+        this.onClose = onClose;
     }
 
     @FXML
-    private void initialize() {
-        // Bind the ListView items to the ObservableList in the ChatModel
-        messageListView.setItems(model.getMessages());
-
-        // Load message history when initializing
-        model.loadMessageHistory();
-        System.out.println("Messages loaded: " + model.getMessages());
-
-        // Send button action handler
-        sendButton.setOnAction(event -> {
-            String messageText = inputField.getText();
-            if (!messageText.isEmpty()) { // Check if message is not empty
-                try {
-                    model.sendMessage("username", messageText); // Replace "username" with actual value
-                    System.out.println("Message sent to model.");
-                } catch (Exception e) {
-                    System.err.println("Error sending message: " + e.getMessage());
-                    e.printStackTrace();
-                }
-                inputField.clear();
-            }
-        });
+    public void handleAddFriend() {
+        showAddFriendDialog();
     }
 
-    // Getters (if needed for other parts of your application)
-    public Button getSendButton() {
-        return sendButton;
+    // Method to open the AddFriendView dialog
+    private void showAddFriendDialog() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/test/fxml/AddFriendView.fxml"));
+            Parent root = loader.load();
+
+            AddFriendController addFriendController = loader.getController();
+            addFriendController.setClient(view.getClient());
+
+            Scene scene = new Scene(root);
+            Stage stage = new Stage();
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public TextField getInputField() {
-        return inputField;
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+
+    }
+
+    public void setView(ChatView chatView) {
+    }
+
+    public void setClient(Client client) {
+    }
+
+    public void setPrimaryStage(Stage stage) {
+    }
+
+    public void setOnClose(Object showLoginScreen) {
+
     }
 }

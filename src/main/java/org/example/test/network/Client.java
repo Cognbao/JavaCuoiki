@@ -5,31 +5,52 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import org.example.test.model.ChatModel;
 import org.example.test.model.Message;
+import org.example.test.view.ChatView;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import static org.example.test.model.Message.MessageType;
 
 public class Client extends Application implements Runnable {
 
+    private static final Logger logger = Logger.getLogger(Client.class.getName());
     private String hostName = "localhost";
     private int portNumber = 12345;
     private String username;
     private org.example.test.view.ChatView view;
-
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private BufferedReader console;
     private Thread listenerThread;
+    private Set<String> friends = new HashSet<>();
 
     public Client(String localhost, int i) {
 
     }
 
+    public Client(ChatView view, String hostName, int portNumber, String username) {
+        this.view = view;
+        this.hostName = hostName;
+        this.portNumber = portNumber;
+        this.username = username;
+    }
+
     public static void main(String[] args) {
         launch(args);
+    }
+
+    public ChatView getView() {
+        return view;
     }
 
     @Override
@@ -93,18 +114,45 @@ public class Client extends Application implements Runnable {
             while (true) {
                 try {
                     Message message = (Message) in.readObject();
-                    if (message.getType() == Message.MessageType.USER_LIST) {
-                        Platform.runLater(() -> view.updateRecipientList(message.getRecipients()));
-                    } else { // This handles both public and private messages
-                        if (message.getRecipient() == null || message.getRecipient().equals(username)) {
-                            // This is a public message or a private message for this client
-                            String formattedMessage = String.format("[%s]: %s", message.getSender(), message.getContent());
-                            Platform.runLater(() -> view.getMessageListView().getItems().add(formattedMessage));
-                        } // Ignore private messages for other clients
+
+                    if (message.getType() == MessageType.USER_LIST) {
+                        Platform.runLater(() -> {
+                            List<String> otherUsers = message.getRecipients().stream()
+                                    .filter(user -> !user.equals(username) && friends.contains(user))
+                                    .toList();
+                            view.updateRecipientList(otherUsers);
+                        });
+                    } else if (message.getType() == MessageType.FRIEND_REQUEST) {
+                        Platform.runLater(() -> {
+                            boolean accepted = view.showFriendRequestDialog(message.getSender());
+                            try {
+                                out.writeObject(new Message(
+                                        MessageType.FRIEND_RESPONSE,
+                                        username, message.getSender(),
+                                        accepted ? "ACCEPTED" : "DECLINED"
+                                ));
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        });
+                    } else if (message.getType() == MessageType.FRIEND_RESPONSE) {
+                        Platform.runLater(() -> {
+                            handleFriendResponse(message);
+                        });
+                    } else if (message.getType() == MessageType.GET_HISTORY) {
+                        Platform.runLater(() -> view.updateMessageList(message.getMessageHistory())); // Update chat history
+                    } else { // Regular message
+                        String recipient = message.getRecipient();
+                        if (recipient == null || recipient.equals(username)) {
+                            Platform.runLater(() -> {
+                                String formattedMessage = String.format("[%s]: %s", message.getSender(), message.getContent());
+                                view.getMessageListView().getItems().add(formattedMessage);
+                            });
+                        }
                     }
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
-                    break;
+                    break; // Exit the loop on error
                 }
             }
         } catch (IOException e) {
@@ -113,6 +161,34 @@ public class Client extends Application implements Runnable {
                 view.getMessageListView().getItems().add("Connection to server lost.");
             });
         }
+    }
+
+    private void handleFriendResponse(Message message) {
+        String friendUsername = message.getSender(); // The sender of the response is the friend
+        String response = message.getContent();
+
+        Platform.runLater(() -> {
+            if (response.equals("ACCEPTED")) {
+                friends.add(friendUsername);
+                view.updateRecipientList(new ArrayList<>(friends)); // Refresh recipient list
+                showAlert(Alert.AlertType.INFORMATION, "Friend Request Accepted",
+                        friendUsername + " accepted your friend request!");
+            } else if (response.equals("DECLINED")) {
+                showAlert(Alert.AlertType.INFORMATION, "Friend Request Declined",
+                        friendUsername + " declined your friend request.");
+            } else {
+                logger.warning("Invalid friend response: " + response);
+                // Optionally, show a generic error message to the user
+            }
+        });
+    }
+
+    private void showAlert(Alert.AlertType alertType, String title, String content) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null); // Optionally, you can set a header text if needed
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     @Override
@@ -124,5 +200,25 @@ public class Client extends Application implements Runnable {
 
     public void startListening(ChatModel model) {
 
+    }
+
+    public void startListening() {
+        listenerThread = new Thread(this);
+        listenerThread.start();
+    }
+
+    public String getUsername() {
+
+        return username;
+    }
+
+    public void requestMessageHistory(String recipient) {
+        try {
+            Message historyRequest = new Message(MessageType.GET_HISTORY, username, recipient); // update
+            out.writeObject(historyRequest);
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle the error appropriately
+        }
     }
 }

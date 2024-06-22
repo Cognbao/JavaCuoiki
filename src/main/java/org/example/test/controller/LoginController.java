@@ -34,17 +34,11 @@ public class LoginController implements Initializable {
     private AuthService authService;
     private Stage primaryStage;
     private Consumer<String> onSuccessfulLogin;
-    private Consumer<String> onSuccess;
 
-    // No-argument constructor required by FXMLLoader
     public LoginController() {
-        onSuccessfulLogin = new Consumer<String>() {
-            @Override
-            public void accept(String s) {
-
-            }
-        };
     }
+    // No-argument constructor required by FXMLLoader
+
     // Constructor with dependency injection
     public LoginController(AuthService authService, Stage primaryStage, Consumer<String> onSuccessfulLogin) {
         this.authService = authService;
@@ -60,6 +54,7 @@ public class LoginController implements Initializable {
         loginButton.setOnAction(this::handleLogin);
         registerButton.setOnAction(this::handleRegister);
     }
+
     @FXML
     private void handleLogin(ActionEvent event) {
         String username = usernameField.getText().trim();
@@ -110,14 +105,27 @@ public class LoginController implements Initializable {
         this.primaryStage = primaryStage;
     }
 
-    public void setOnSuccess(Consumer<String> onSuccess) {
-        this.onSuccess = onSuccess;
+    public void setOnSuccessfulLogin(Consumer<String> onSuccessfulLogin) {
+        this.onSuccessfulLogin = onSuccessfulLogin;
     }
+
     private void showAlert(Alert.AlertType alertType, String title, String content) {
         Alert alert = new Alert(alertType);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    public void setStage(Stage stage) {
+        this.primaryStage = stage;
+    }
+
+    public void setOnSuccess(Object showChatScreen) {
+        this.onSuccessfulLogin.accept((String) showChatScreen);
+    }
+
+    public String getUsername() {
+        return usernameField.getText();
     }
 }

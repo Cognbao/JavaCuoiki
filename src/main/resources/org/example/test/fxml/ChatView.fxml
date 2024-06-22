@@ -2,9 +2,9 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
-<BorderPane fx:controller="org.example.test.controller.ChatController" xmlns:fx="http://javafx.com/fxml"
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.test.controller.ChatController"
             fx:id="root">
     <center>
         <ListView fx:id="messageListView"/>
