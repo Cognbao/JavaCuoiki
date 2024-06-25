@@ -15,11 +15,9 @@ import org.example.test.network.Client;
 import org.example.test.service.AuthService;
 import org.example.test.view.ChatView;
 
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-
-import java.io.IOException;
 
 public class ChatApp extends Application {
     private static final Logger logger = Logger.getLogger(ChatApp.class.getName());
@@ -27,13 +25,8 @@ public class ChatApp extends Application {
     private static ChatApp instance;
     private AuthService authService;
 
-
     public static ChatApp getInstance() {
         return instance;
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 
     @Override
@@ -59,8 +52,8 @@ public class ChatApp extends Application {
             stage.setScene(scene);
             stage.show();
         } catch (IOException e) {
-            System.err.println("Failed to load login screen: " + e.getMessage());
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to load login screen", e);
+            showErrorAlert("Failed to load login screen: " + e.getMessage());
         }
     }
 
@@ -70,35 +63,32 @@ public class ChatApp extends Application {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/test/fxml/ChatView.fxml"));
             Parent root = loader.load();
 
+            // Get ChatController from FXMLLoader
             ChatController chatController = loader.getController();
 
-            Client client = new Client(new ChatView(), "localhost", 12345, username);
+            // Initialize your model and client
+            Client client = new Client(chatController, "localhost", 12345, username); // Assuming Client takes ChatController
             ChatModel chatModel = new ChatModel(client);
 
+            // Set model and client in ChatController
             chatController.setClient(client);
             chatController.setModel(chatModel);
 
+            // Set up the stage and scene
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.setTitle("Chat App - " + username);
             stage.setOnCloseRequest(event -> {
-                try {
-                    client.disconnect();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                client.disconnect();
             });
             stage.show();
 
-            // Start the client's listening thread
-            new Thread(client).start();
+            // Start client's listening thread
+            client.startListening();
 
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to load chat screen", e);
-            e.printStackTrace();
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Unexpected error", e);
-            e.printStackTrace();
+            showErrorAlert("Failed to load chat screen: " + e.getMessage());
         }
     }
 
@@ -115,19 +105,27 @@ public class ChatApp extends Application {
             Stage registerStage = new Stage();
             registerStage.setScene(scene);
             registerStage.show();
-        } catch (IOException e) { // Catch IOException and SQLException
-            System.err.println("Failed to load register screen: " + e.getMessage());
-            e.printStackTrace();
-            // Optionally, show an alert to the user if you're in a JavaFX Application Thread
-            if (Platform.isFxApplicationThread()) {
-                Platform.runLater(() -> {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Error");
-                    alert.setHeaderText(null);
-                    alert.setContentText("An error occurred while loading the registration screen.");
-                    alert.showAndWait();
-                });
-            }
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to load register screen", e);
+            showErrorAlert("Failed to load register screen: " + e.getMessage());
         }
+    }
+
+    private void showErrorAlert(String message) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
+    }
+
+    public static void main(String[] args) {
+        // Set global exception handler
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            logger.log(Level.SEVERE, "Unhandled exception in thread " + thread, throwable);
+        });
+        launch(args);
     }
 }

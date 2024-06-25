@@ -14,7 +14,7 @@
     </top>
     <center>
         <VBox>
-            <ListView fx:id="messageListView"/>
+            <ListView fx:id="messageListView" xmlns:fx="http://javafx.com/fxml" />
             <TextField fx:id="inputField"/>
             <Button fx:id="sendButton" text="Send"/>
         </VBox>

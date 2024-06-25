@@ -13,7 +13,7 @@ public class AuthService {
     public boolean registerUser(User user) throws SQLException {
         String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
         try (Connection conn = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/UserDB?useUnicode=true&characterEncoding=UTF-8", "root", "Bin141005");
+                "jdbc:mysql://localhost:3306/UserDB", "root", "Bin141005");
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, user.getUsername());
@@ -28,7 +28,7 @@ public class AuthService {
     public boolean authenticateUser(String username, String password) throws SQLException {
         String sql = "SELECT password FROM users WHERE username = ?";
         try (Connection conn = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/UserDB?useUnicode=true&characterEncoding=UTF-8", "root", "Bin141005");
+                "jdbc:mysql://localhost:3306/UserDB", "root", "Bin141005");
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, username);

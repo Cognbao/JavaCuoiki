@@ -17,6 +17,7 @@ module chat.app {
 
     opens org.example.test.controller to javafx.fxml;
     opens org.example.test.view to javafx.fxml;
+    exports org.example.test.util;
 
 
 }

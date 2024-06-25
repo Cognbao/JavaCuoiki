@@ -46,11 +46,14 @@ public class ChatView extends BorderPane implements Initializable {
 
     // ... other getter methods ...
 
-    public void updateRecipientList(List<String> newRecipients) {
-        recipientComboBox.getItems().clear();
-        recipientComboBox.getItems().addAll(newRecipients);
+    public void updateRecipientList(List<String> recipients) {
+        if (recipientComboBox != null) {
+            recipientComboBox.getItems().clear();
+            recipientComboBox.getItems().addAll(recipients);
+        } else {
+            System.err.println("recipientComboBox is null");
+        }
     }
-
     public String showUsernameDialog() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Enter Username");
@@ -79,10 +82,13 @@ public class ChatView extends BorderPane implements Initializable {
     }
 
     public void updateMessageList(List<String> messages) {
-        messageListView.getItems().clear(); // Clear previous messages
-        messageListView.getItems().addAll(messages); // Add new messages
+        if (messageListView != null) {
+            messageListView.getItems().clear();
+            messageListView.getItems().addAll(messages);
+        } else {
+            System.err.println("messageListView is null");
+        }
     }
-
     public ListView<String> getMessageListView() {
         return messageListView;
     }

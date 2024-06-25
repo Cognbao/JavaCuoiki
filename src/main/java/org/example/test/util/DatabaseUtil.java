@@ -1,4 +1,4 @@
-package org.example.test.model; // Adjust the package to your project structure
+package org.example.test.util; // Adjust the package to your project structure
 
 import java.sql.*;
 import java.util.ArrayList;

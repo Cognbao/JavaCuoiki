@@ -2,6 +2,7 @@ package org.example.test.network;
 
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
+import org.example.test.controller.ChatController;
 import org.example.test.model.Message;
 import org.example.test.view.ChatView;
 
@@ -30,9 +31,9 @@ public class Client implements Runnable {
     private ObjectInputStream in;
     private Consumer<Message> newMessageListener;
     private Thread listenerThread;
+    private ChatController chatController;
 
     private Set<String> friends = new HashSet<>();
-
 
     public Client(ChatView view, String hostName, int portNumber, String username) {
         this.view = view;
@@ -40,6 +41,18 @@ public class Client implements Runnable {
         this.portNumber = portNumber;
         this.username = username;
         instance = this;
+    }
+
+    public Client(ChatController chatController, String host, int port, String username) {
+        this.chatController = chatController;
+        this.hostName = host;
+        this.portNumber = port;
+        this.username = username;
+        instance = this;
+    }
+
+    public void setView(ChatView view) {
+        this.view = view;
     }
 
     public static Client getInstance() {
@@ -58,7 +71,7 @@ public class Client implements Runnable {
     }
 
     public void startListening() {
-        Thread listenerThread = new Thread(this);
+        listenerThread = new Thread(this);
         listenerThread.start();
     }
 
@@ -71,50 +84,14 @@ public class Client implements Runnable {
         try (Socket socket = new Socket(hostName, portNumber)) {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
-
+            logger.info("Connected to server at: " + hostName + ":" + portNumber);
             // Send username to server
             out.writeObject(new Message(username, null, null));
 
             while (true) {
                 try {
                     Message message = (Message) in.readObject();
-                    switch (message.getType()) {
-                        case USER_LIST -> Platform.runLater(() -> {
-                            List<String> otherUsers = message.getRecipients().stream()
-                                    .filter(user -> !user.equals(username) && friends.contains(user))
-                                    .toList();
-                            view.updateRecipientList(otherUsers);
-                        });
-                        case FRIEND_REQUEST -> Platform.runLater(() -> {
-                            boolean accepted = view.showFriendRequestDialog(message.getSender());
-                            try {
-                                out.writeObject(new Message(
-                                        MessageType.FRIEND_RESPONSE,
-                                        username, message.getSender(),
-                                        accepted ? "ACCEPTED" : "DECLINED"
-                                ));
-                                if (accepted) {
-                                    friends.add(message.getSender());
-                                    view.updateRecipientList(new ArrayList<>(friends));
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        });
-                        case FRIEND_RESPONSE -> Platform.runLater(() -> handleFriendResponse(message));
-                        case GET_HISTORY ->
-                                Platform.runLater(() -> view.updateMessageList(message.getMessageHistory()));
-                        case MESSAGE -> {
-                            String recipient = message.getRecipient();
-                            if (recipient == null || recipient.equals(username)) {
-                                Platform.runLater(() -> {
-                                    String formattedMessage = String.format("[%s]: %s", message.getSender(), message.getContent());
-                                    view.getMessageListView().getItems().add(formattedMessage);
-                                });
-                            }
-                        }
-                        default -> logger.warning("Unknown message type: " + message.getType());
-                    }
+                    handleIncomingMessage(message);
                 } catch (IOException | ClassNotFoundException e) {
                     logger.log(Level.SEVERE, "Error reading message from server", e);
                     break;
@@ -126,13 +103,53 @@ public class Client implements Runnable {
         }
     }
 
+    private void handleIncomingMessage(Message message) {
+        switch (message.getType()) {
+            case USER_LIST -> Platform.runLater(() -> {
+                List<String> otherUsers = message.getRecipients().stream()
+                        .filter(user -> !user.equals(username) && friends.contains(user))
+                        .toList();
+                view.updateRecipientList(otherUsers);
+            });
+            case FRIEND_REQUEST -> Platform.runLater(() -> {
+                boolean accepted = view.showFriendRequestDialog(message.getSender());
+                try {
+                    out.writeObject(new Message(
+                            MessageType.FRIEND_RESPONSE,
+                            username, message.getSender(),
+                            accepted ? "ACCEPTED" : "DECLINED"
+                    ));
+                    if (accepted) {
+                        friends.add(message.getSender());
+                        view.updateRecipientList(new ArrayList<>(friends));
+                    }
+                } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Error sending friend response", e);
+                }
+            });
+            case FRIEND_RESPONSE -> Platform.runLater(() -> handleFriendResponse(message));
+            case GET_HISTORY ->
+                    Platform.runLater(() -> view.updateMessageList(message.getMessageHistory()));
+            case MESSAGE -> {
+                String recipient = message.getRecipient();
+                if (recipient == null || recipient.equals(username)) {
+                    Platform.runLater(() -> {
+                        String formattedMessage = String.format("[%s]: %s", message.getSender(), message.getContent());
+                        view.getMessageListView().getItems().add(formattedMessage);
+                    });
+                }
+            }
+            default -> logger.warning("Unknown message type: " + message.getType());
+        }
+    }
+
     public void sendFriendRequest(String friendUsername) {
         try {
             Message request = new Message(MessageType.FRIEND_REQUEST, username, friendUsername, null);
             out.writeObject(request);
         } catch (IOException e) {
-            e.printStackTrace();
-            // Handle the error appropriately (e.g., show an error message to the user)
+            logger.log(Level.SEVERE, "Error sending friend request", e);
+            Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to send friend request."));
         }
     }
 
@@ -151,9 +168,7 @@ public class Client implements Runnable {
                 }
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error sending message", e);
-                Platform.runLater(() -> {
-                    view.getMessageListView().getItems().add("Error sending message.");
-                });
+                Platform.runLater(() -> view.getMessageListView().getItems().add("Error sending message."));
             }
         } else {
             logger.warning("Cannot send message. Output stream is not open.");
@@ -161,17 +176,31 @@ public class Client implements Runnable {
         }
     }
 
-    public void disconnect() throws IOException {
+    public void disconnect() {
         System.out.println("Disconnecting from server...");
         if (out != null) {
-            out.writeObject(new Message(MessageType.LOGOUT, username, null, null));
-            out.flush();
-            out.close();
+            try {
+                out.writeObject(new Message(MessageType.LOGOUT, username, null, null));
+                out.flush();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error sending logout message", e);
+            } finally {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Error closing output stream", e);
+                }
+            }
         }
-        if (in != null) in.close();
+        if (in != null) {
+            try {
+                in.close();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error closing input stream", e);
+            }
+        }
         if (listenerThread != null && listenerThread.isAlive()) {
             listenerThread.interrupt();
-
         }
     }
 

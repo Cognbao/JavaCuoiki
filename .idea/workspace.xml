@@ -6,12 +6,19 @@
   <component name="ChangeListManager">
     <list default="true" id="b88a1792-dbb4-4b5a-9c92-3939a681d6c9" name="Changes" comment="fixed a">
       <change beforePath="$PROJECT_DIR$/.idea/dataSources/3abdc621-c39c-4b7c-94d9-d5811bda77b4.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/3abdc621-c39c-4b7c-94d9-d5811bda77b4.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/module-info.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/controller/ChatController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/controller/ChatController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/main/ChatApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/main/ChatApp.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/model/ChatModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/model/ChatModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/network/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/network/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/network/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/network/Server.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/service/AuthService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/service/MessageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/service/MessageService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/util/DatabaseUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/util/DatabaseUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/test/view/ChatView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/test/view/ChatView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/org/example/test/fxml/ChatView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/org/example/test/fxml/ChatView.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +64,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "ASKED_ADD_EXTERNAL_FILES": "true",
-    "Application.ChatApp.executor": "Run",
+    "Application.ChatApp.executor": "Debug",
     "Application.Client.executor": "Run",
     "Application.HelloApplication.executor": "Run",
     "Application.Server.executor": "Run",
@@ -92,6 +99,9 @@
     </key>
     <key name="ExtractSuperBase.RECENT_KEYS">
       <recent name="org.example.test.controller" />
+    </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="org.example.test.util" />
     </key>
   </component>
   <component name="RunManager" selected="Application.ChatApp">
@@ -185,7 +195,13 @@
       <workItem from="1718992250936" duration="2227000" />
       <workItem from="1719054761246" duration="19000" />
       <workItem from="1719054962927" duration="11303000" />
-      <workItem from="1719072415680" duration="17953000" />
+      <workItem from="1719072415680" duration="18549000" />
+      <workItem from="1719101771723" duration="3975000" />
+      <workItem from="1719105784325" duration="1543000" />
+      <workItem from="1719107713227" duration="91000" />
+      <workItem from="1719108158630" duration="49000" />
+      <workItem from="1719108299270" duration="977000" />
+      <workItem from="1719282987820" duration="3231000" />
     </task>
     <task id="LOCAL-00001" summary="fixed">
       <option name="closed" value="true" />

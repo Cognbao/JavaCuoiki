@@ -21,6 +21,7 @@ import org.example.test.view.ChatView;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -76,14 +77,23 @@ public class ChatController implements Initializable {
         }
     }
 
-    public void initializeModel() {
-        if (model == null) {
-            throw new IllegalStateException("Model has not been initialized");
-        }
+    private void initializeModel() {
         logger.info("Initializing model in ChatController");
-        updateMessageList(model.getMessages());
-        model.loadMessageHistory();
-        logger.info("Messages loaded: " + model.getMessages());
+        if (client == null || client.getUsername() == null) {
+            logger.severe("Client or username is null, cannot load message history.");
+            return;
+        }
+        try {
+            model.loadMessageHistory(client.getUsername());
+            logger.info("Messages loaded successfully.");
+            List<String> messages = model.getMessageHistory(client.getUsername());
+            if (messages != null) {
+                messageListView.getItems().setAll(messages);
+            }
+        } catch (Exception e) {
+            logger.severe("Error initializing model: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void updateMessageList(ObservableList<Message> messages) {
@@ -142,7 +152,7 @@ public class ChatController implements Initializable {
             String messageText = inputField.getText();
             if (!messageText.isEmpty()) {
                 model.sendMessage(client.getUsername(), messageText);
-                System.out.println("Message sent to model.");
+                logger.info("Message sent to model.");
                 inputField.clear();
             }
         } catch (Exception e) {

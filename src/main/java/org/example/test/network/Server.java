@@ -1,6 +1,6 @@
 package org.example.test.network;
 
-import org.example.test.model.DatabaseUtil;
+import org.example.test.util.DatabaseUtil;
 import org.example.test.model.Message;
 import org.example.test.service.MessageService;
 

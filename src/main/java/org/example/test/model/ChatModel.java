@@ -5,6 +5,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.example.test.network.Client;
 import org.example.test.service.MessageService;
+import org.example.test.util.DatabaseUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -60,8 +61,8 @@ public class ChatModel {
             logger.info("Executing query to load message history for user: " + username);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    String sender = rs.getString("sender");
-                    String recipient = rs.getString("recipient");
+                    String sender = rs.getString("sender_id");
+                    String recipient = rs.getString("recipient_id");
                     String content = rs.getString("content");
                     logger.info("Retrieved message from DB - Sender: " + sender + ", Recipient: " + recipient + ", Content: " + content);
                     Message message = new Message(sender, recipient, content);
@@ -78,7 +79,7 @@ public class ChatModel {
     public void loadMessageHistory(String recipient) {
         List<Message> messageList = new ArrayList<>();
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM messages WHERE (sender_id = ? AND recipient_id = ?) OR (sender = ? AND recipient = ?)")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM messages WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)")) {
             String username = client.getUsername();
             stmt.setString(1, username);
             stmt.setString(2, recipient);
@@ -88,8 +89,8 @@ public class ChatModel {
             logger.info("Executing query to load message history between user: " + username + " and recipient: " + recipient);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    String sender = rs.getString("sender");
-                    String recipientName = rs.getString("recipient");
+                    String sender = rs.getString("sender_id");
+                    String recipientName = rs.getString("recipient_id");
                     String content = rs.getString("content");
                     logger.info("Retrieved message from DB - Sender: " + sender + ", Recipient: " + recipientName + ", Content: " + content);
                     Message message = new Message(sender, recipientName, content);
@@ -110,6 +111,31 @@ public class ChatModel {
     private void onNewMessage(Message message) {
         if (newMessageListener != null) {
             Platform.runLater(() -> newMessageListener.accept(message));
+        }
+    }
+
+    public List<String> getMessageHistory(String username) {
+        List<String> messageHistory = null;
+        try {
+            // Replace this with actual database query logic using DatabaseUtil or your preferred database access method
+            messageHistory = DatabaseUtil.loadMessageHistory(username);
+            logger.info("Loaded " + messageHistory.size() + " messages from the database for user: " + username);
+        } catch (Exception e) {
+            logger.severe("Failed to load message history from database: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return messageHistory;
+    }
+
+    // Example method to save message
+    public void saveMessage(String sender, String recipient, String content) {
+        try {
+            // Replace this with actual database save logic using DatabaseUtil or your preferred database access method
+            DatabaseUtil.saveMessage(sender, recipient, content);
+            logger.info("Saved message from " + sender + " to " + recipient + " in the database");
+        } catch (Exception e) {
+            logger.severe("Failed to save message: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
